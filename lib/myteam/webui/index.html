@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MyTeam</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#1d2330; --muted:#6b7385; --line:#e3e6ec;
+  --accent:#3b6ff5; --accent-ink:#fff; --work:#1f9d55; --block:#d98a00; --idle:#3aa76d;
+  --off:#a5abb8; --err:#c9372c; --me:#7b45d6; --traffic:#0e8a9a; --term:#0f1420; --term-ink:#d7dde8;
+  --chip:#eef1f6; --shadow:0 1px 2px rgba(20,30,50,.06),0 4px 16px rgba(20,30,50,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#0f1218;--panel:#171b23;--ink:#e6e9ef;--muted:#8e97a8;--line:#262c38;--chip:#212734;
+  --accent:#6b8fff;--off:#5d6577;--shadow:none;--term:#0a0d13}
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.1px}
+header .sub{color:var(--muted)}
+header .sp{flex:1}
+.clock{font-variant-numeric:tabular-nums;color:var(--muted)}
+button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.ghost{background:transparent}
+button.danger{color:var(--err)}
+.wrap{display:grid;grid-template-columns:270px minmax(0,1fr) 330px;gap:14px;padding:14px;min-height:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);min-height:0}
+aside.members{display:flex;flex-direction:column;overflow:hidden}
+.ctitle{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 6px;font-size:12px;font-weight:650;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.mlist{overflow:auto;padding:4px 8px 10px}
+.m{display:grid;grid-template-columns:14px 1fr auto;gap:2px 8px;padding:8px;border-radius:9px;cursor:pointer}
+.m:hover{background:var(--chip)}
+.m .dot{grid-row:1/3;margin-top:5px}
+.m .nm{font-weight:600}
+.m .rl{grid-column:2/4;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m .st{font-size:11.5px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--off);display:inline-block}
+.dot.working{background:var(--work);box-shadow:0 0 0 3px color-mix(in srgb,var(--work) 25%,transparent);animation:pulse 1.6s infinite}
+.dot.blocked{background:var(--block)}
+.dot.idle{background:transparent;border:2px solid var(--idle)}
+.dot.gone{background:var(--err)}
+@keyframes pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--work) 0%,transparent)}}
+.badge{display:inline-block;font-size:11px;padding:0 6px;border-radius:9px;background:var(--chip);color:var(--muted)}
+.badge.warn{background:color-mix(in srgb,var(--block) 18%,transparent);color:var(--block)}
+.stats{padding:10px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;display:flex;gap:14px}
+main{display:flex;flex-direction:column;gap:14px;min-height:0}
+.brief{padding-bottom:6px}
+.brow{display:grid;grid-template-columns:14px 92px 150px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 14px;cursor:pointer}
+.brow:hover{background:var(--chip)}
+.brow .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .rl{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .dg{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .dg.need{color:var(--block);font-weight:600}
+.brow .ag{color:var(--muted);font-size:12px;white-space:nowrap}
+.offline{padding:4px 14px 8px;color:var(--muted);font-size:12.5px}
+.feedcard{flex:1;display:flex;flex-direction:column;min-height:0}
+.feed{flex:1;overflow:auto;padding:6px 16px 12px;font-size:13.5px}
+.it{padding:3px 0;white-space:pre-wrap;word-break:break-word}
+.it.sys{color:var(--muted)}
+.it.me{color:var(--me);font-weight:550}
+.it.err{color:var(--err)}
+.it.traffic{color:var(--traffic)}
+.it.traffic::before{content:"⇄ "}
+.reply{margin:8px 0;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:8px 12px;background:color-mix(in srgb,var(--chip) 55%,transparent)}
+.reply .who{font-weight:650;font-size:12.5px;margin-bottom:4px;display:flex;justify-content:space-between}
+.reply .who a{color:var(--accent);cursor:pointer;font-weight:500}
+.reply pre{margin:0;white-space:pre-wrap;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
+.ts{color:var(--off);font-size:11px;margin-right:6px;font-variant-numeric:tabular-nums}
+.composer{border-top:1px solid var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;padding:3px 9px;border-radius:14px;background:var(--chip);border:none;color:var(--ink)}
+.inrow{display:flex;gap:8px}
+textarea{flex:1;resize:none;font:inherit;border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--bg);color:var(--ink);min-height:42px;max-height:160px}
+textarea:focus,input:focus{outline:2px solid color-mix(in srgb,var(--accent) 45%,transparent);border-color:var(--accent)}
+.hint{font-size:11.5px;color:var(--muted)}
+aside.side{display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;gap:4px;padding:10px 10px 0}
+.tab{border:none;background:transparent;padding:6px 10px;border-radius:7px;color:var(--muted);font-weight:600}
+.tab.on{background:var(--chip);color:var(--ink)}
+.pane{overflow:auto;padding:8px 10px 12px;flex:1}
+.task{padding:8px;border-radius:8px;border:1px solid var(--line);margin-bottom:6px}
+.task .h{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+.task button{padding:2px 8px;font-size:12px}
+.file{padding:6px 8px;border-radius:7px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.file:hover{background:var(--chip)}
+.file .p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;text-align:left}
+.file .t{color:var(--muted);font-size:12px;white-space:nowrap}
+input.search{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;margin-bottom:8px}
+.empty{color:var(--muted);padding:10px 4px;font-size:13px}
+/* overlays */
+.ov{position:fixed;inset:0;background:rgba(10,14,22,.45);display:none;align-items:stretch;justify-content:flex-end;z-index:5}
+.ov.on{display:flex}
+.drawer{width:min(980px,96vw);background:var(--panel);display:flex;flex-direction:column;border-left:1px solid var(--line)}
+.dh{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dh h2{margin:0;font-size:15px}
+.term{flex:1;margin:0;overflow:auto;background:var(--term);color:var(--term-ink);padding:12px 14px;font:12.5px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre}
+.term:focus{outline:none;box-shadow:inset 0 0 0 2px var(--accent)}
+.live{font-size:11.5px;padding:2px 8px;border-radius:10px;background:var(--chip);color:var(--muted)}
+.live.on{background:color-mix(in srgb,var(--work) 20%,transparent);color:var(--work);font-weight:600}
+.menu{display:none;gap:8px;padding:10px 14px;border-top:1px solid var(--line);align-items:center;flex-wrap:wrap;background:color-mix(in srgb,var(--block) 10%,transparent)}
+.menu.on{display:flex}
+.menu b{font-size:13px;margin-right:4px}
+.menu button.sel{border-color:var(--accent);font-weight:600}
+.keys{display:flex;gap:6px;padding:10px 14px;border-top:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.keys input{flex:1;min-width:200px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+.note{font-size:12px;color:var(--muted);padding:0 16px 10px}
+.setup{overflow:auto;padding:6px 20px 30px}
+.setup h3{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:22px 0 10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.setup input,.setup select,.setup textarea{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.setup textarea{width:100%;min-height:70px;resize:vertical}
+.mrow{display:grid;grid-template-columns:120px minmax(0,1fr) 110px auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px}
+.mrow .rl{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.form{display:grid;grid-template-columns:130px minmax(0,1fr);gap:10px 12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:8px}
+.form label{color:var(--muted);font-size:13px}
+.form .full{grid-column:1/3}
+#pform textarea{min-height:56px}
+@media (max-width:700px){ .form{grid-template-columns:1fr} .form .full{grid-column:1} .mrow{grid-template-columns:1fr auto} .mrow .rl{display:none} }
+.msg{font-size:13px;margin-left:6px}
+.msg.bad{color:var(--err)} .msg.good{color:var(--work)}
+.viewer pre{flex:1;margin:0;overflow:auto;padding:16px 20px;white-space:pre-wrap;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}
+@media (max-width:1100px){
+  body{display:block;overflow:auto}
+  header{flex-wrap:wrap;padding:10px 16px;position:sticky;top:0;z-index:2}
+  header .sub,.clock{display:none}
+  .wrap{grid-template-columns:1fr;padding:12px 16px}
+  aside.members,aside.side,.mlist,.pane{overflow:visible}
+  .mlist{display:grid;grid-template-columns:1fr 1fr}
+  .feedcard{height:70vh}
+  .pane{max-height:60vh;overflow:auto}
+  .brow{grid-template-columns:14px 70px minmax(0,1fr) auto;gap:8px}
+  .brow .rl{display:none}
+}
+@media (max-width:420px){ .mlist{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="group">MyTeam</h1><span class="sub" data-i="room">control room</span>
+  <span class="sp"></span>
+  <span class="clock" id="clock"></span>
+  <button class="primary" id="upbtn" data-i="startall">Start everyone</button>
+  <button class="ghost" id="langbtn">中文</button>
+  <button class="ghost" id="setupbtn" data-i="setup">⚙ Setup</button>
+</header>
+<div class="wrap">
+  <aside class="card members">
+    <div class="ctitle"><span data-i="members">Members</span></div>
+    <div class="mlist" id="mlist"></div>
+    <div class="stats"><span id="st-q"></span><span id="st-t"></span></div>
+  </aside>
+  <main>
+    <section class="card brief">
+      <div class="ctitle"><span data-i="briefing">Briefing — what the team is doing</span></div>
+      <div id="brief"></div>
+    </section>
+    <section class="card feedcard">
+      <div class="feed" id="feed"></div>
+      <div class="composer">
+        <div class="chips" id="chips"></div>
+        <div class="inrow">
+          <textarea id="in" rows="1" placeholder="sam: draft the newsletter · @all … · assign bill … · help"></textarea>
+          <button class="primary" id="sendbtn" data-i="send">Send</button>
+        </div>
+        <div class="hint" data-i="hint">Enter to send · Shift+Enter new line · Tab completes names · ↑ previous</div>
+      </div>
+    </section>
+  </main>
+  <aside class="card side">
+    <div class="tabs">
+      <button class="tab on" data-tab="tasks" data-i="tasks">Tasks</button>
+      <button class="tab" data-tab="files" data-i="files">Files</button>
+    </div>
+    <div class="pane" id="p-tasks"></div>
+    <div class="pane" id="p-files" style="display:none">
+      <input class="search" id="fq" placeholder="filter files…">
+      <div id="flist"></div>
+    </div>
+  </aside>
+</div>
+
+<div class="ov" id="ov-term">
+  <div class="drawer">
+    <div class="dh">
+      <span class="dot" id="t-dot"></span><h2 id="t-name"></h2><span class="badge" id="t-st"></span>
+      <span class="sp" style="flex:1"></span>
+      <span class="live" id="t-live" data-i="kbdoff">click the terminal to type into it</span>
+      <button id="t-start" data-i="start">Start</button>
+      <button class="danger" id="t-stop" data-i="stop">Stop</button>
+      <button class="ghost" id="t-close">✕</button>
+    </div>
+    <pre class="term" id="t-out" tabindex="0"></pre>
+    <div class="menu" id="t-menu"></div>
+    <div class="keys">
+      <input id="t-in" placeholder="type into this member's terminal…">
+      <button class="primary" id="t-send" data-i="sendenter">Send + Enter</button>
+      <button data-k="Enter">Enter</button><button data-k="Up">↑</button><button data-k="Down">↓</button>
+      <button data-k="Escape">Esc</button>
+    </div>
+    <div class="note" data-i="termnote">You are typing straight into this member's terminal, as if you were sitting at it — click the dark area and type, or use the buttons. Messages for the member are better sent from the main box.</div>
+  </div>
+</div>
+
+<div class="ov" id="ov-setup">
+  <div class="drawer">
+    <div class="dh"><h2 data-i="setuptitle">Team setup</h2><span class="sp" style="flex:1"></span>
+      <button class="ghost" id="s-close">✕</button></div>
+    <div class="setup" id="s-body"></div>
+  </div>
+</div>
+
+<div class="ov" id="ov-file">
+  <div class="drawer viewer">
+    <div class="dh"><h2 id="f-name"></h2><span class="sp" style="flex:1"></span>
+      <a id="f-dl" class="badge" download data-i="download">download</a>
+      <button class="ghost" id="f-close">✕</button></div>
+    <pre id="f-out"></pre>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const T = {
+  en:{room:"control room",startall:"Start everyone",members:"Members",briefing:"Briefing — what the team is doing",
+      send:"Send",hint:"Enter to send · Shift+Enter new line · Tab completes names · ↑ previous",tasks:"Tasks",files:"Files",
+      start:"Start",stop:"Stop",sendenter:"Send + Enter",download:"download",
+      termnote:"You are typing straight into this member's terminal, as if you were sitting at it — click the dark area and type (arrows, Enter, Esc work), or use the buttons. Messages for the member are better sent from the main box.",
+      kbdoff:"click the terminal to type into it",kbdon:"⌨ keyboard → terminal (Esc twice or click outside to stop)",answer:"Answer:",
+      queued:"queued msgs",open:"open tasks",notrun:"not running",none:"No one is running yet — press “Start everyone”.",
+      notasks:"No open tasks. Assign one: assign <member> <task>",nofiles:"Nothing in deliverables/ or handbook/ yet.",
+      done:"done",needs:"needs you",working:"working",blocked:"needs you",idle:"idle",off:"off",gone:"exited",
+      lang:"中文",setup:"⚙ Setup",setuptitle:"Team setup",s_team:"Team",s_name:"Team name",s_lang:"Language",
+      s_members:"Members",s_hire:"+ Hire a member",s_edit:"Edit",s_retire:"Retire",s_save:"Save",s_cancel:"Cancel",
+      s_mname:"Name",s_role:"Role",s_custom:"custom role…",s_ctitle:"Role title",s_duties:"Duties",s_focus:"Focus",
+      s_agent:"Agent CLI",s_cmd:"Command",s_workdir:"Working folder",s_folders:"Extra folders",s_fhint:"one per line, full paths (e.g. ~/Clients/Acme). The member can read and write these, plus its working folder and the shared deliverables/, handbook/, bus/.",s_installed:"installed",s_skills:"Shared skills",s_sync:"Re-render skills for everyone",
+      s_note:"Changes apply the next time a member starts (Stop + Start in their terminal window).",
+      s_retireq:"Retire {m}? Their session stops and their workspace is archived to alumni/ (nothing is deleted).",
+      s_rename:"Rename",s_pack:"Field preset",s_packnote:"Sets the roles offered first when hiring (★), the shared skills every member gets, how agents address you, and the profile form. Existing members keep their roles.",s_profile:"Company profile",s_psave:"Save profile",
+      s_pnote:"Every member reads this as a skill, and it's saved in handbook/. Running members pick it up on their next start.",clickans:"click to answer",stopq:"Stop {m}? Their current conversation ends (files are kept).",tasksN:"task",msgs:"msg"},
+  zh:{room:"控制室",startall:"全部启动",members:"成员",briefing:"简报 — 团队在做什么",send:"发送",
+      hint:"回车发送 · Shift+回车换行 · Tab 补全名字 · ↑ 上一条",tasks:"任务",files:"文件",start:"启动",stop:"停止",
+      sendenter:"发送并回车",download:"下载",
+      termnote:"你正直接在该成员的终端里打字，就像坐在它面前一样 — 点击黑色区域后直接打字（方向键、回车、Esc 都可用），或用下面的按钮。给成员的消息最好从主输入框发送。",
+      kbdoff:"点击终端即可直接输入",kbdon:"⌨ 键盘 → 终端（连按两次 Esc 或点外面退出）",answer:"回答：",
+      queued:"待送消息",open:"未完任务",notrun:"未运行",none:"还没有成员在运行 — 点“全部启动”。",
+      notasks:"没有未完任务。分配：assign <成员> <任务>",nofiles:"deliverables/ 和 handbook/ 里还没有文件。",
+      done:"完成",needs:"等你处理",working:"工作中",blocked:"等你处理",idle:"空闲",off:"未运行",gone:"已退出",
+      lang:"English",setup:"⚙ 设置",setuptitle:"团队设置",s_team:"团队",s_name:"团队名称",s_lang:"语言",
+      s_members:"成员",s_hire:"+ 聘用新成员",s_edit:"编辑",s_retire:"退休",s_save:"保存",s_cancel:"取消",
+      s_mname:"名字",s_role:"角色",s_custom:"自定义角色…",s_ctitle:"角色名称",s_duties:"职责",s_focus:"工作方向",
+      s_agent:"Agent CLI",s_cmd:"启动命令",s_workdir:"工作文件夹",s_folders:"额外文件夹",s_fhint:"每行一个完整路径（如 ~/Clients/Acme）。成员可读写这些文件夹，以及其工作文件夹和共享的 deliverables/、handbook/、bus/。",s_installed:"已安装",s_skills:"共享技能",s_sync:"为所有成员重新生成技能",
+      s_note:"修改会在成员下次启动时生效（在其终端窗口里先停止再启动）。",
+      s_retireq:"让 {m} 退休？其会话会停止，工作区归档到 alumni/（不会删除任何文件）。",
+      s_rename:"改名",s_pack:"领域预设",s_packnote:"决定聘用时优先列出的角色（★）、每位成员获得的共享技能、成员对你的称呼，以及简介表单。现有成员保留原角色。",s_profile:"公司简介",s_psave:"保存简介",
+      s_pnote:"每位成员都会以技能形式读到它，并保存在 handbook/ 中。正在运行的成员下次启动时生效。",clickans:"点击处理",stopq:"停止 {m}？当前对话会结束（文件保留）。",tasksN:"任务",msgs:"消息"}
+};
+const ROLE_ZH={"operations-manager":"运营总管","executive-assistant":"行政助理","bookkeeper":"记账","tax-prep":"税务准备",
+ "customer-support":"客服支持","sales":"销售跟进","marketing":"市场推广","copywriter":"文案","market-researcher":"市场调研",
+ "contracts-compliance":"合同合规","hr":"人事","data-analyst":"数据分析","reviewer":"审核","generalist":"全能助理"};
+let S = {members:[],tasks:[],lang:"en"}, L = T.en, last = 0, termM = null, hist = [], hi = -1, files = [];
+
+async function api(path, body){
+  const r = await fetch(path, body ? {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)} : {});
+  if (r.status === 403) { document.body.innerHTML = "<p style='padding:30px'>Session expired — run <b>myteam-web</b> again.</p>"; throw 0; }
+  return r.headers.get("content-type","").includes("json") ? r.json() : r.text();
+}
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const role = (r, z) => S.lang === "zh" ? (z || ROLE_ZH[r] || r) : r;
+
+function applyLang(){
+  L = T[S.lang] || T.en;
+  document.querySelectorAll("[data-i]").forEach(e => { if (L[e.dataset.i]) e.textContent = L[e.dataset.i]; });
+  $("#langbtn").textContent = L.lang;
+  document.documentElement.lang = S.lang === "zh" ? "zh" : "en";
+}
+
+function renderMembers(){
+  $("#mlist").innerHTML = S.members.map(m => `
+    <div class="m" data-m="${esc(m.name)}" title="${esc(m.role_title)}">
+      <span class="dot ${m.status}"></span>
+      <span class="nm">${esc(m.display)}</span>
+      <span class="st">${m.queued ? `<span class="badge warn">${m.queued} ${L.msgs}</span> ` : ""}${esc(L[m.status]||m.status)}</span>
+      <span class="rl">${esc(role(m.role, m.role_zh))}</span>
+    </div>`).join("");
+  const q = S.members.reduce((a,m)=>a+m.queued,0);
+  $("#st-q").textContent = `${L.queued}: ${q}`;
+  $("#st-t").textContent = `${L.open}: ${S.tasks.length}`;
+}
+
+function renderBrief(){
+  const order = {working:0,blocked:1,idle:2,gone:3,off:4};
+  const rows = [...S.members].sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
+  const act = rows.filter(m => m.status !== "off" || m.doing);
+  const idle = rows.filter(m => m.status === "off" && !m.doing).map(m=>m.display);
+  let h = act.map(m => {
+    const need = m.status === "blocked";
+    const tail = [m.tasks ? `${m.tasks} ${L.tasksN}` : "", m.ago].filter(Boolean).join(" · ");
+    return `<div class="brow" data-m="${esc(m.name)}">
+      <span class="dot ${m.status}"></span><span class="nm">${esc(m.display)}</span>
+      <span class="rl">${esc(role(m.role, m.role_zh))}</span>
+      <span class="dg ${need?"need":""}" title="${esc(m.doing)}">${esc(m.doing || "—")}${need ? " — " + L.clickans : ""}</span>
+      <span class="ag">${esc(tail)}</span></div>`;}).join("");
+  if (!act.length) h = `<div class="offline">${L.none}</div>`;
+  if (idle.length && act.length) h += `<div class="offline">${L.notrun}: ${esc(idle.join(", "))}</div>`;
+  $("#brief").innerHTML = h;
+}
+
+function renderTasks(){
+  $("#p-tasks").innerHTML = S.tasks.length ? S.tasks.map(t => `
+    <div class="task"><div class="h"><span>#${t.id} · ${esc(t.owner)}</span>
+      <button data-done="${t.id}">✓ ${L.done}</button></div>${esc(t.task)}</div>`).join("")
+    : `<div class="empty">${L.notasks}</div>`;
+}
+
+function renderChips(){
+  const base = ["@all ","brief","standup","tasks","help"];
+  const names = S.members.slice(0,8).map(m => m.display.toLowerCase()+": ");
+  $("#chips").innerHTML = [...base, ...names].map(c => `<button class="chip" data-chip="${esc(c)}">${esc(c.trim())}</button>`).join("");
+}
+
+function addFeed(items){
+  const f = $("#feed"), stick = f.scrollHeight - f.scrollTop - f.clientHeight < 60;
+  for (const e of items){
+    last = Math.max(last, e.id);
+    const t = new Date(e.ts*1000).toTimeString().slice(0,5);
+    const d = document.createElement("div");
+    if (e.kind === "reply"){
+      d.className = "reply";
+      d.innerHTML = `<div class="who"><span>${esc(e.who)}</span><a data-m="${esc(e.who)}">open terminal ›</a></div><pre>${esc(e.text)}</pre>`;
+    } else {
+      d.className = "it " + e.kind;
+      d.innerHTML = `<span class="ts">${t}</span>${esc(e.text)}`;
+    }
+    f.appendChild(d);
+  }
+  while (f.children.length > 1500) f.removeChild(f.firstChild);
+  if (stick && items.length) f.scrollTop = f.scrollHeight;
+}
+
+async function tick(){
+  try{
+    const st = await api("/api/state");
+    const langChanged = st.lang !== S.lang;
+    const roster = JSON.stringify(st.members.map(m=>m.name));
+    const rosterChanged = roster !== JSON.stringify(S.members.map(m=>m.name));
+    S = st; $("#group").textContent = st.group; document.title = st.group + " · MyTeam";
+    if (langChanged) applyLang();
+    renderMembers(); renderBrief(); renderTasks();
+    if (langChanged || rosterChanged) renderChips();
+    const fd = await api("/api/feed?since=" + last);
+    addFeed(fd.items);
+  }catch(e){}
+}
+setInterval(()=>{ $("#clock").textContent = new Date().toTimeString().slice(0,8); }, 1000);
+
+// composer
+const box = $("#in");
+async function send(){
+  const v = box.value.trim(); if (!v) return;
+  hist.push(v); hi = -1; box.value = ""; grow();
+  await api("/api/input", {text:v}); setTimeout(tick, 400);
+}
+function grow(){ box.style.height = "auto"; box.style.height = Math.min(160, box.scrollHeight) + "px"; }
+box.addEventListener("input", grow);
+box.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); }
+  else if (e.key === "Tab"){
+    e.preventDefault();
+    const m = box.value.match(/(@?)([\w-]*)$/); if (!m || !m[2]) return;
+    const pool = [...S.members.map(x=>x.display), "all","assign","tasks","done","brief","standup","start","up","help"];
+    const hit = pool.filter(p => p.toLowerCase().startsWith(m[2].toLowerCase()));
+    if (hit.length === 1) box.value = box.value.slice(0, box.value.length - m[2].length) + hit[0] + (m[1] || box.value.trim()===m[2] ? (m[1]?" ":": ") : " ");
+  }
+  else if (e.key === "ArrowUp" && !box.value.includes("\n") && hist.length){
+    e.preventDefault(); hi = hi < 0 ? hist.length-1 : Math.max(0, hi-1); box.value = hist[hi];
+  }
+});
+$("#sendbtn").onclick = send;
+$("#chips").onclick = e => { const c = e.target.dataset.chip; if (!c) return;
+  if (c.endsWith(" ")) { box.value = c; box.focus(); } else { box.value = c; send(); } };
+$("#upbtn").onclick = async () => { await api("/api/up", {}); setTimeout(tick, 800); };
+$("#langbtn").onclick = async () => { await api("/api/lang", {lang: S.lang === "zh" ? "en" : "zh"}); tick(); };
+$("#p-tasks").onclick = async e => { const id = e.target.dataset.done; if (id){ await api("/api/input",{text:"done "+id}); setTimeout(tick,300);} };
+
+// tabs + files
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b));
+  $("#p-tasks").style.display = b.dataset.tab === "tasks" ? "" : "none";
+  $("#p-files").style.display = b.dataset.tab === "files" ? "" : "none";
+  if (b.dataset.tab === "files") loadFiles();
+});
+function ago(t){ const s = Date.now()/1000 - t; return s<90?"now":s<5400?Math.floor(s/60)+"m":s<172800?Math.floor(s/3600)+"h":Math.floor(s/86400)+"d"; }
+async function loadFiles(){ files = (await api("/api/files")).files; showFiles(); }
+function showFiles(){
+  const q = $("#fq").value.toLowerCase();
+  const fs = files.filter(f => f.path.toLowerCase().includes(q)).slice(0, 400);
+  $("#flist").innerHTML = fs.length ? fs.map(f => `<div class="file" data-p="${esc(f.path)}">
+     <span class="p" title="${esc(f.path)}">&lrm;${esc(f.path)}</span><span class="t">${ago(f.mtime)}</span></div>`).join("")
+     : `<div class="empty">${L.nofiles}</div>`;
+}
+$("#fq").oninput = showFiles;
+$("#flist").onclick = async e => {
+  const d = e.target.closest(".file"); if (!d) return;
+  const p = d.dataset.p, url = "/api/file?p=" + encodeURIComponent(p);
+  $("#f-name").textContent = p; $("#f-dl").href = url;
+  const r = await fetch(url);
+  $("#f-out").textContent = (r.headers.get("content-type")||"").startsWith("text") ? await r.text() : "(binary file — use download)";
+  $("#ov-file").classList.add("on");
+};
+$("#f-close").onclick = () => $("#ov-file").classList.remove("on");
+
+// member terminal drawer
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-m]"); if (!el || el.closest("#ov-term") || el.closest("#ov-setup")) return;
+  openTerm(el.dataset.m);
+});
+async function openTerm(m){ termM = m; $("#t-menu").dataset.key = ""; $("#ov-term").classList.add("on"); await peek(true); tout.focus(); }
+async function peek(scroll){
+  if (!termM) return;
+  const p = await api("/api/peek?m=" + encodeURIComponent(termM));
+  $("#t-name").textContent = p.member; $("#t-dot").className = "dot " + p.status;
+  $("#t-st").textContent = L[p.status] || p.status;
+  const o = $("#t-out"), atEnd = o.scrollHeight - o.scrollTop - o.clientHeight < 40;
+  o.textContent = p.running ? p.lines.join("\n") : "(" + L.notrun + ")";
+  if (scroll || atEnd) o.scrollTop = o.scrollHeight;
+  const mb = $("#t-menu");
+  if (p.menu && p.menu.options.length){
+    const key = JSON.stringify(p.menu);
+    if (mb.dataset.key !== key){
+      mb.dataset.key = key;
+      mb.innerHTML = `<b>${L.answer}</b>` + p.menu.options.map((o,i) =>
+        `<button data-opt="${i}" class="${i===p.menu.selected?"sel":""}">${esc(o)}</button>`).join("");
+    }
+    mb.classList.add("on");
+  } else { mb.classList.remove("on"); mb.dataset.key = ""; }
+  $("#t-start").style.display = p.running ? "none" : "";
+  $("#t-stop").style.display = p.running ? "" : "none";
+}
+setInterval(() => { if (termM) peek(false); }, 1500);
+function closeTerm(){ termM = null; $("#ov-term").classList.remove("on"); }
+$("#t-close").onclick = closeTerm;
+$("#ov-term").onclick = e => { if (e.target.id === "ov-term") closeTerm(); };
+$("#ov-file").onclick = e => { if (e.target.id === "ov-file") $("#ov-file").classList.remove("on"); };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !e.target.closest(".keys") && e.target.id !== "t-out") { closeTerm(); $("#ov-file").classList.remove("on"); } });
+async function keys(text, key){ await api("/api/keys", {m: termM, text, key}); setTimeout(()=>peek(true), 350); }
+$("#t-send").onclick = () => { const v = $("#t-in").value; $("#t-in").value = ""; keys(v, "Enter"); };
+$("#t-in").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing){ e.preventDefault(); $("#t-send").click(); } });
+document.querySelectorAll(".keys [data-k]").forEach(b => b.onclick = () => keys("", b.dataset.k));
+$("#t-menu").onclick = async e => {
+  const i = e.target.dataset.opt; if (i === undefined) return;
+  await api("/api/choose", {m: termM, index: +i}); setTimeout(()=>peek(true), 600);
+};
+const KEYMAP = {Enter:"Enter",Escape:"Escape",ArrowUp:"Up",ArrowDown:"Down",ArrowLeft:"Left",ArrowRight:"Right",
+  Tab:"Tab",Backspace:"Backspace",Delete:"Delete",Home:"Home",End:"End",PageUp:"PageUp",PageDown:"PageDown"};
+const tout = $("#t-out"); let lastEsc = 0, buf = "", bufT = null;
+function liveBadge(on){ const b = $("#t-live"); b.classList.toggle("on", on); b.textContent = on ? L.kbdon : L.kbdoff; }
+tout.addEventListener("focus", () => liveBadge(true));
+tout.addEventListener("blur", () => liveBadge(false));
+function flushBuf(){ if (buf){ const t = buf; buf = ""; api("/api/keys", {m: termM, text: t}); } }
+tout.addEventListener("keydown", e => {
+  if (e.isComposing || e.metaKey) return;          // let Cmd-C / Cmd-V / IME behave normally
+  let key = null;
+  if (e.ctrlKey && /^[a-z]$/i.test(e.key)) key = "C-" + e.key.toLowerCase();
+  else if (e.key === "Tab" && e.shiftKey) key = "BTab";
+  else key = KEYMAP[e.key] || null;
+  if (key){
+    e.preventDefault();
+    if (key === "Escape"){ const n = Date.now(); if (n - lastEsc < 600){ tout.blur(); lastEsc = 0; return; } lastEsc = n; }
+    flushBuf(); api("/api/keys", {m: termM, key}); setTimeout(()=>peek(true), 250); return;
+  }
+  if (e.key.length === 1 && !e.ctrlKey && !e.altKey){
+    e.preventDefault(); buf += e.key; clearTimeout(bufT);
+    bufT = setTimeout(() => { flushBuf(); setTimeout(()=>peek(true), 250); }, 120);
+  }
+});
+tout.addEventListener("paste", e => { e.preventDefault(); const t = e.clipboardData.getData("text"); if (t){ flushBuf(); api("/api/keys",{m:termM,text:t}); } });
+tout.addEventListener("compositionend", e => { if (e.data){ flushBuf(); api("/api/keys",{m:termM,text:e.data}); } });
+$("#t-start").onclick = async () => { await api("/api/start", {m: termM}); setTimeout(()=>peek(true), 1200); };
+$("#t-stop").onclick = async () => { const d = $("#t-name").textContent;
+  if (confirm(L.stopq.replace("{m}", d))) { await api("/api/stop", {m: termM}); setTimeout(()=>peek(true), 500); } };
+
+// ---------- setup ----------
+let SU = null;
+async function openSetup(){ SU = await api("/api/setup"); renderSetup(); $("#ov-setup").classList.add("on"); }
+function opt(v, label, sel){ return `<option value="${esc(v)}" ${sel?"selected":""}>${esc(label)}</option>`; }
+function memberForm(m){
+  const allRoles = SU.role_groups.flatMap(g => g.roles.map(r => ({...r, pack: g.pack})));
+  const isTpl = m && allRoles.some(r => r.id === m.role && r.title === m.role_title) || (m && allRoles.some(r => r.id === m.role) && !m.instructions);
+  let picked = false;
+  const roleOpts = SU.role_groups.map((g, gi) => `<optgroup label="${esc(S.lang === "zh" ? g.zh : g.en)}${gi === 0 ? " ★" : ""}">` +
+    g.roles.map(r => { const sel = !picked && (m ? (isTpl && m.role === r.id && (m.role_title === r.title || gi === 0)) : (gi === 0 && r.id === "generalist"));
+      if (sel) picked = true;
+      return opt(g.pack + ":" + r.id, (S.lang === "zh" ? r.zh + " · " : "") + r.id + " — " + r.title, sel); }).join("") + `</optgroup>`).join("");
+  const agent = m ? (["claude","codex"].includes(m.cmd) ? m.cmd : "custom") : "claude";
+  return `<div class="form" id="mform" data-name="${esc(m ? m.name : "")}">
+    <label>${L.s_mname}</label><input id="f-display" value="${esc(m ? m.display : "")}" placeholder="e.g. Tina">
+    <label>${L.s_role}</label><select id="f-role">${roleOpts}
+      ${opt("__custom", L.s_custom, m && !isTpl)}</select>
+    <label class="cust">${L.s_ctitle}</label><input class="cust" id="f-ctitle" value="${esc(m && !isTpl ? m.role_title : "")}" placeholder="e.g. Translator (EN↔ZH)">
+    <label class="cust">${L.s_duties}</label><textarea class="cust" id="f-duties" placeholder="what this member does, in a paragraph">${esc(m && !isTpl ? m.instructions : "")}</textarea>
+    <label>${L.s_focus}</label><input id="f-focus" value="${esc(m ? m.focus : "")}" placeholder="one sentence, optional">
+    <label>${L.s_agent}</label><div class="row"><select id="f-agent">${SU.agents.map(a => opt(a.id, a.label + (a.installed ? " ✓ " + L.s_installed : ""), a.id === agent)).join("")}</select>
+      <input id="f-cmd" value="${esc(agent === "custom" && m ? m.cmd : "")}" placeholder="command, e.g. gemini" style="flex:1"></div>
+    <label>${L.s_workdir}</label><div class="rl">${esc(m ? m.workdir : SU.state + "/members/<name>")}</div>
+    <label>${L.s_folders}</label><textarea id="f-folders" placeholder="~/Clients/Acme&#10;~/Documents/Tax-2026">${esc(m ? (m.folders || []).join("\n") : "")}</textarea>
+    <div class="full rl" style="opacity:.75">${L.s_fhint}</div>
+    <div class="full row"><button class="primary" id="f-save">${L.s_save}</button><button id="f-cancel">${L.s_cancel}</button><span class="msg" id="f-msg"></span></div>
+  </div>`;
+}
+function syncFormVis(){
+  const f = $("#mform"); if (!f) return;
+  const cust = $("#f-role").value === "__custom";
+  f.querySelectorAll(".cust").forEach(e => e.style.display = cust ? "" : "none");
+  $("#f-cmd").style.display = $("#f-agent").value === "custom" ? "" : "none";
+}
+function renderSetup(editing){
+  const ms = SU.members.map(m => editing === m.name ? memberForm(m) : `
+    <div class="mrow"><b>${esc(m.display)}</b><span class="rl" title="${esc(m.role_title)}">${esc(role(m.role, m.role_zh))} · ${esc(m.role_title)}</span>
+      <span class="rl">${esc(m.cmd)}</span>
+      <span class="row"><button data-edit="${esc(m.name)}">${L.s_edit}</button><button class="danger" data-retire="${esc(m.name)}">${L.s_retire}</button></span></div>`).join("");
+  $("#s-body").innerHTML = `
+    <h3>${L.s_team}</h3>
+    <div class="row"><label>${L.s_name}</label><input id="s-group" value="${esc(SU.group)}" style="min-width:240px">
+      <button id="s-gsave">${L.s_rename}</button>
+      <label style="margin-left:18px">${L.s_lang}</label>
+      <select id="s-lang">${opt("en","English",SU.lang!=="zh")}${opt("zh","中文",SU.lang==="zh")}</select>
+      <span class="msg" id="s-msg"></span></div>
+    <div class="row" style="margin-top:12px"><label>${L.s_pack}</label>
+      <select id="s-pack">${SU.packs.map(pk => opt(pk.id, (S.lang === "zh" ? pk.zh : pk.en) + " — " + pk.blurb, pk.id === SU.pack)).join("")}</select></div>
+    <p class="hint">${L.s_packnote}</p>
+    <h3>${esc(S.lang === "zh" ? SU.profile_title.zh : SU.profile_title.en)}</h3>
+    <div class="form" id="pform">
+      ${SU.profile_fields.map(f => `<label>${esc(S.lang === "zh" ? f.zh : f.en)}</label>` + (f.multi
+        ? `<textarea data-pk="${f.key}" placeholder="${esc(f.ph)}">${esc(SU.profile[f.key] || "")}</textarea>`
+        : `<input data-pk="${f.key}" placeholder="${esc(f.ph)}" value="${esc(SU.profile[f.key] || "")}">`)).join("")}
+      <div class="full row"><button class="primary" id="p-save">${L.s_psave}</button><span class="msg" id="p-msg"></span></div>
+      <div class="full hint">${L.s_pnote}</div>
+    </div>
+    <h3>${L.s_members}</h3>${ms || ""}
+    ${editing === "__new" ? memberForm(null) : `<button class="primary" id="s-hire" style="margin-top:6px">${L.s_hire}</button>`}
+    <p class="hint">${L.s_note}</p>
+    <h3>${L.s_skills}</h3><button id="s-sync">${L.s_sync}</button>`;
+  syncFormVis();
+}
+function flash(id, ok, text){ const e = $(id); if (e){ e.className = "msg " + (ok ? "good" : "bad"); e.textContent = text; } }
+async function setupPost(action, body, msgId){
+  const r = await fetch("/api/setup/" + action, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)});
+  const j = await r.json(); flash(msgId, j.ok, j.message); return j.ok;
+}
+$("#s-body").addEventListener("change", e => { if (["f-role","f-agent"].includes(e.target.id)) syncFormVis(); });
+$("#s-body").addEventListener("click", async e => {
+  const t = e.target;
+  if (t.dataset.edit){ renderSetup(t.dataset.edit); return; }
+  if (t.dataset.retire){
+    const m = SU.members.find(x => x.name === t.dataset.retire);
+    if (confirm(L.s_retireq.replace("{m}", m.display))){ await setupPost("retire", {name: m.name}, "#s-msg"); SU = await api("/api/setup"); renderSetup(); tick(); }
+    return;
+  }
+  if (t.id === "s-hire"){ renderSetup("__new"); $("#f-display").focus(); return; }
+  if (t.id === "f-cancel"){ renderSetup(); return; }
+  if (t.id === "s-gsave"){ if (await setupPost("team", {group: $("#s-group").value}, "#s-msg")) tick(); return; }
+  if (t.id === "p-save"){
+    const prof = {}; document.querySelectorAll("#pform [data-pk]").forEach(e => { prof[e.dataset.pk] = e.value; });
+    if (await setupPost("profile", {profile: prof}, "#p-msg")) SU = await api("/api/setup");
+    return;
+  }
+  if (t.id === "s-sync"){ await setupPost("sync", {}, "#s-msg"); flash("#s-msg", true, "✓"); return; }
+  if (t.id === "f-save"){
+    const f = $("#mform"), role = $("#f-role").value, name = f.dataset.name;
+    const body = {name, display: $("#f-display").value, role: role === "__custom" ? "" : role,
+      custom_id: role === "__custom" ? $("#f-ctitle").value.split(/[ (]/)[0] : "", role_title: $("#f-ctitle").value,
+      instructions: $("#f-duties").value, focus: $("#f-focus").value, agent: $("#f-agent").value, cmd: $("#f-cmd").value,
+      folders: $("#f-folders").value};
+    if (await setupPost(name ? "edit" : "hire", body, "#f-msg")){ SU = await api("/api/setup"); renderSetup(); tick(); }
+  }
+});
+$("#s-body").addEventListener("change", async e => {
+  if (e.target.id === "s-pack"){ await setupPost("pack", {pack: e.target.value}, "#s-msg"); SU = await api("/api/setup"); renderSetup(); tick(); return; }
+  if (e.target.id === "s-lang"){ await api("/api/lang", {lang: e.target.value}); await tick(); SU = await api("/api/setup"); renderSetup(); }
+});
+$("#setupbtn").onclick = openSetup;
+$("#s-close").onclick = () => $("#ov-setup").classList.remove("on");
+$("#ov-setup").onclick = e => { if (e.target.id === "ov-setup") $("#ov-setup").classList.remove("on"); };
+
+applyLang(); tick(); setInterval(tick, 2000);
+</script>
+</body>
+</html>
