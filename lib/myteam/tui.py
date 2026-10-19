@@ -706,7 +706,6 @@ class Room:
                                 side - 4, curses.color_pair(C_DIM))
                     row += 2
             row += 1
-        row -= 1
         if row < h - 3:
             need = len(team.pending_requests())
             scr.addnstr(row, 1, "{}: {}".format(self.S["needs_you"], need), side - 2,
