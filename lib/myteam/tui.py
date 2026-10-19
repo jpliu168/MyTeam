@@ -50,34 +50,42 @@ S = {
     "en": {
         "room": "control room",
         "members": "MEMBERS",
+        "manager_hdr": "MANAGER",
+        "spec_hdr": "SPECIALISTS",
+        "asleep": "asleep",
+        "needs_you": "needs you",
         "shortcuts": "SHORTCUTS",
         "sc_lines": [
-            "sam: <msg>     talk",
-            "@all <msg>     everyone",
-            "up             start all",
-            "open sam       start+visit",
+            "just type      talk to {mgr}",
+            "inbox          what needs you",
+            "approve <id>   say yes",
+            "staff          the team",
+            "@writer <msg>  a specialist",
+            "open <m>       visit a terminal",
             "ctrl-b then d  come back",
             "setup / set    manage team",
-            "brief          who's doing what",
             "help / h       all commands",
             "quit / q       leave",
         ],
         "queued": "queued msgs",
         "opentasks": "open tasks ",
         "hint": " Tab complete · ↑↓ history · PgUp/Dn scroll · setup · help · quit · watch {} ",
-        "welcome": ("Welcome to the {} control room. Type a member's name to talk, "
-                    "`help` for all commands, `setup` to manage the team."),
+        "welcome": ("Welcome to the {} control room. Just type — it goes to your "
+                    "manager, {mgr}. `inbox` = what needs you · `help` = all commands."),
         "notunderstood": "not understood — try `help`",
         "back": "(back in the control room)",
-        "tip": ("tip: members don't auto-start. `up` starts everyone, or "
-                "`open <member>` / `start <member>` starts one."),
+        "tip": ("{mgr} brings in specialists when a job needs them and puts them to "
+                "sleep after — you don't need to start anyone."),
         "left": "left the control room — the team keeps working.",
         "help": [
-            "talk      sam: <msg> · sam, <msg> · @sam <msg> · @sam @david <msg> · @all <msg>",
+            "talk      just type — it goes to your manager",
+            "you       inbox = what needs you · approve <id> · decline <id> [reason]",
+            "team      staff = manager, specialists, role catalog · learned = what the team learned",
+            "direct    writer: <msg> · @writer <msg> · @all <msg>  (talk to a specialist yourself)",
             "board     assign <m> <task> · tasks · done <id>",
             "views     roster · standup · log · watch on|off (agent-to-agent traffic)",
             "briefing  brief = full briefing in the feed · brief on|off = pinned panel up top",
-            "run       up = start everyone · start <m> = start one · open <m> = start+enter",
+            "run       up = start the manager · start <m> = start one · open <m> = start+enter",
             "visit     open <m> = step into their terminal · RETURN: press ctrl-b, then d",
             "setup     hire/edit/retire members, change their agent CLI, language, skills",
             "keys      Tab complete · up/down history · PgUp/PgDn scroll feed",
@@ -87,7 +95,7 @@ S = {
         ],
         "setup_menu": [
             "— {} setup —  (plain mode; the control room resumes when you finish)",
-            "  1) hire a new member",
+            "  1) add a specialist",
             "  2) edit a member (role, focus, agent CLI: claude/codex/other)",
             "  3) retire a member (archive to alumni/)",
             "  4) language / 语言  (current: {})",
@@ -100,38 +108,46 @@ S = {
         "setup_lang": "interface language: 1) English  2) 中文",
         "setup_done": "setup closed — back to the control room.",
         "brief": "BRIEFING — what the team is doing",
-        "brief_off": "not running",
-        "brief_none": "(no one is running — `up` to start the team)",
+        "brief_off": "asleep",
+        "brief_none": "(no one is running — `up` starts your manager)",
     },
     "zh": {
         "room": "控制室",
         "members": "成员",
+        "manager_hdr": "经理",
+        "spec_hdr": "专家",
+        "asleep": "休眠",
+        "needs_you": "待你决定",
         "shortcuts": "快捷操作",
         "sc_lines": [
-            "sam: <消息>    对话",
-            "@all <消息>    广播全员",
-            "up             启动全部",
-            "open sam       启动并进入",
+            "直接输入       与 {mgr} 对话",
+            "inbox          待你处理的事",
+            "approve <编号> 批准",
+            "staff          团队一览",
+            "@专家 <消息>   直接找专家",
+            "open <成员>    进入其终端",
             "ctrl-b 再按 d  返回这里",
             "setup / set    团队设置",
-            "brief          谁在做什么",
             "help / h       全部命令",
             "quit / q       退出",
         ],
         "queued": "待送消息",
         "opentasks": "未完任务",
         "hint": " Tab 补全 · ↑↓ 历史 · PgUp/Dn 翻页 · setup 设置 · help 帮助 · quit 退出 · watch {} ",
-        "welcome": "欢迎来到 {} 控制室。输入成员名字即可对话；`help` 查看全部命令；`setup` 管理团队。",
+        "welcome": "欢迎来到 {} 控制室。直接输入即可与经理 {mgr} 对话；`inbox` 查看待你处理的事；`help` 查看全部命令。",
         "notunderstood": "没看懂 — 试试 `help`",
         "back": "（已返回控制室）",
-        "tip": "提示：成员默认不自动启动。用 `up` 启动全部，或 `open <成员>` / `start <成员>` 启动某位。",
+        "tip": "{mgr} 会按需唤醒专家、完成后让其休眠 — 你不需要启动任何人。",
         "left": "已离开控制室 — 团队在后台继续运行。",
         "help": [
-            "对话      sam: <消息> · sam, <消息> · @sam <消息> · @sam @david <消息> · @all <消息>",
+            "对话      直接输入 — 发给你的经理",
+            "你        inbox 待你处理 · approve <编号> 批准 · decline <编号> [理由] 拒绝",
+            "团队      staff 经理/专家/角色目录 · learned 团队最近学到了什么",
+            "直接      writer: <消息> · @writer <消息> · @all <消息>（自己直接找专家）",
             "任务板    assign <成员> <任务> · tasks 查看 · done <编号> 完成",
             "查看      roster 名册 · standup 晨会 · log 通信记录 · watch on|off（成员间通信直播）",
             "简报      brief = 在信息流中显示完整简报 · brief on|off = 顶部简报面板开/关",
-            "启动      up = 启动全部 · start <成员> = 启动某位 · open <成员> = 启动并进入",
+            "启动      up = 启动经理 · start <成员> = 启动某位 · open <成员> = 启动并进入",
             "探访      open <成员> = 进入其终端 · 返回：先按 ctrl-b，再按 d",
             "设置      setup：聘用/编辑/退休成员、更换其 agent CLI、语言、技能",
             "按键      Tab 补全 · ↑↓ 历史 · PgUp/PgDn 翻页",
@@ -141,7 +157,7 @@ S = {
         ],
         "setup_menu": [
             "— {} 设置 —（普通模式；完成后自动回到控制室）",
-            "  1) 聘用新成员",
+            "  1) 添加专家",
             "  2) 编辑成员（角色、方向、agent CLI：claude/codex/其他）",
             "  3) 成员退休（归档到 alumni/）",
             "  4) 语言 / language（当前：{}）",
@@ -154,8 +170,8 @@ S = {
         "setup_lang": "界面语言: 1) English  2) 中文",
         "setup_done": "设置完成 — 返回控制室。",
         "brief": "简报 — 团队在做什么",
-        "brief_off": "未运行",
-        "brief_none": "（没有成员在运行 — 用 `up` 启动团队）",
+        "brief_off": "休眠",
+        "brief_none": "（没有成员在运行 — 用 `up` 启动经理）",
     },
 }
 
@@ -210,7 +226,15 @@ class Room:
             i = int(key[5:])
             return lines[i] if i < len(lines) else ""
         txt = self.S.get(key, "")
-        return txt.format(self.cfg["group"]) if key == "welcome" else txt
+        mgr = self._mgr_name()
+        if key == "welcome":
+            return txt.replace("{mgr}", mgr).format(self.cfg["group"])
+        return txt.replace("{mgr}", mgr)
+
+    def _mgr_name(self):
+        from . import team
+        mg = team.manager(self.cfg)
+        return config.display(mg) if mg else ("经理" if self.lang == "zh" else "the manager")
 
     def say_ui(self, key, color=0):
         self._gid += 1
@@ -582,7 +606,8 @@ class Room:
 
     # ---------- drawing ----------
     def _side_width(self, w):
-        need = max([cols(s) for s in self.S["sc_lines"]] + [20]) + 3
+        need = max([cols(s.replace("{mgr}", self._mgr_name())) for s in self.S["sc_lines"]]
+                   + [20]) + 3
         return max(20, min(34, need, w // 3))
 
     def _put(self, y, x, s, attr=0):
@@ -650,22 +675,43 @@ class Room:
         # sidebar
         glyphs = {"working": ("●", C_WORK), "blocked": ("◐", C_BLOCK),
                   "idle": ("○", C_OK), "off": ("·", C_DIM)}
-        scr.addnstr(1, 1, self.S["members"], side - 2, curses.A_BOLD)
-        row = 2
-        for m in self.cfg["members"]:
-            st = self.statuses.get(m["name"], "off")
-            g, col = glyphs[st]
-            if row < h - 3:
-                scr.addnstr(row, 1, g, 2, curses.color_pair(col))
-                scr.addnstr(row, 3, "{:<12}".format(config.display(m)[:12]), 13, curses.A_BOLD)
-                if self.lang == "zh":
-                    st_lbl = STATUS_ZH.get(st, st)
-                    role_lbl = ROLE_ZH.get(m["role"], m["role"])
-                else:
-                    st_lbl, role_lbl = st, m["role"]
-                scr.addnstr(row + 1, 3, "{} {}".format(st_lbl, role_lbl),
-                            side - 4, curses.color_pair(C_DIM))
-                row += 2
+        from . import team
+        mg = team.manager(self.cfg)
+        groups = ([(self.S["manager_hdr"], [mg]),
+                   (self.S["spec_hdr"], team.specialists(self.cfg))] if mg
+                  else [(self.S["members"], self.cfg["members"])])
+        row = 1
+        for hdr, ms in groups:
+            if row >= h - 3:
+                break
+            scr.addnstr(row, 1, hdr, side - 2, curses.A_BOLD)
+            row += 1
+            for m in ms:
+                st = self.statuses.get(m["name"], "off")
+                g, col = glyphs[st]
+                if row < h - 3:
+                    star = "★ " if mg and m is mg else ""
+                    scr.addnstr(row, 1, g, 2, curses.color_pair(col))
+                    scr.addnstr(row, 3, fit(star + config.display(m), 14), side - 4,
+                                curses.A_BOLD)
+                    if st == "off" and mg and m is not mg:
+                        st_lbl = self.S["asleep"]
+                    elif self.lang == "zh":
+                        st_lbl = STATUS_ZH.get(st, st)
+                    else:
+                        st_lbl = st
+                    role_lbl = ROLE_ZH.get(m["role"], m["role"]) if self.lang == "zh" \
+                        else m["role"]
+                    scr.addnstr(row + 1, 3, "{} {}".format(st_lbl, role_lbl),
+                                side - 4, curses.color_pair(C_DIM))
+                    row += 2
+            row += 1
+        row -= 1
+        if row < h - 3:
+            need = len(team.pending_requests())
+            scr.addnstr(row, 1, "{}: {}".format(self.S["needs_you"], need), side - 2,
+                        curses.color_pair(C_BLOCK) | curses.A_BOLD if need
+                        else curses.color_pair(C_DIM))
         if row < h - 3:
             q = sum(len(bus.pending(sessions.sname(m["name"])))
                     for m in self.cfg["members"])
@@ -679,7 +725,8 @@ class Room:
                 scr.addnstr(y0, 1, self.S["shortcuts"], side - 2, curses.A_BOLD)
                 for i, sc in enumerate(self.S["sc_lines"]):
                     if y0 + 1 + i < h - 3:
-                        scr.addnstr(y0 + 1 + i, 1, sc, side - 2,
+                        scr.addnstr(y0 + 1 + i, 1, sc.replace("{mgr}", self._mgr_name()),
+                                    side - 2,
                                     curses.color_pair(C_DIM))
         for y in range(1, h - 2):
             scr.addch(y, side, curses.ACS_VLINE)
@@ -718,9 +765,11 @@ class Room:
             return
         live = sessions.list_sessions()
         started = []
-        for m in self.cfg["members"]:
+        from . import team
+        mg = team.manager(self.cfg)
+        for m in ([mg] if mg else self.cfg["members"]):
             if sessions.sname(m["name"]) not in live:
-                sessions.launch(self.cfg, m, attach=False)
+                self.say(team.wake(self.cfg, m, by="owner"), C_DIM)
                 started.append(config.display(m))
         me = config.root() / "bin" / "myteam"
         sessions.run_daemon_session('"{}" daemon run'.format(me))
