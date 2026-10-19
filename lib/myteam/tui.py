@@ -276,6 +276,9 @@ class Room:
                     except ValueError:
                         continue
                     frm = rec.get("from", "")
+                    mgs = self._mgr_session()
+                    if mgs and rec.get("to") == mgs and rec.get("kind") in ("report", "decision"):
+                        self.awaiting[mgs] = time.time()     # the manager will summarize
                     if frm.startswith(sessions.PREFIX) and self.watch_traffic:
                         t = rec.get("text", "")
                         self.say("⇄ {} → {} [{}] {}".format(
@@ -299,6 +302,11 @@ class Room:
                 self.say("✗ {} exited — `open {}` to investigate".format(
                     self.short(name), self.short(name)), C_BLOCK)
 
+    def _mgr_session(self):
+        from . import team
+        mg = team.manager(self.cfg)
+        return sessions.sname(mg["name"]) if mg else None
+
     # ---------- commands ----------
     def target(self, token):
         m = config.member(self.cfg, token)
@@ -314,9 +322,9 @@ class Room:
     def send(self, member, text):
         name = sessions.sname(member["name"])
         if name not in sessions.list_sessions():
-            sessions.launch(self.cfg, member, attach=False)
-            self.say("(started {} in the background)".format(config.display(member)), C_DIM)
-            time.sleep(1)
+            from . import team
+            self.say("(starting {} …)".format(config.display(member)), C_DIM)
+            self.say("({})".format(team.wake(self.cfg, member, by="owner")), C_DIM)
         outcome = bus.deliver(name, text, sender="owner")
         self.awaiting[name] = time.time()
         self.say("you → {}: {}".format(config.display(member), text), C_PI)
@@ -445,9 +453,24 @@ class Room:
             if bad and "all" not in [b.lower() for b in bad]:
                 self.say("no member: {}".format(", ".join(bad)), C_BLOCK)
             return True
+        from . import team
+        if cmd in ("inbox", "staff"):
+            self.say(team.inbox_text(self.cfg) if cmd == "inbox" else team.staff_text(self.cfg),
+                     C_DIM)
+            return True
+        if cmd in ("approve", "decline") and rest:
+            parts = rest.split(None, 1)
+            self.say(team.decide(self.cfg, parts[0], cmd == "approve",
+                                 parts[1] if len(parts) > 1 else ""), C_PI)
+            return True
+        mg = team.manager(self.cfg)
+        first = raw.split()[0]
         m = self.target(cmd)
-        if m and rest:
+        if m and rest and (not mg or m["name"] == mg["name"] or first[-1] in ":,"):
             self.send(m, rest.lstrip(",:; "))
+            return True
+        if mg:                                   # everything else goes to the manager
+            self.send(mg, raw)
             return True
         self.say_ui("notunderstood", C_BLOCK)
         return True

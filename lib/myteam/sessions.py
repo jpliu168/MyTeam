@@ -45,14 +45,18 @@ def resolve(token, sessions=None):
     raise SystemExit("'{}' is ambiguous: {}".format(token, ", ".join(hits)))
 
 
-def launch(cfg, m, attach=True):
+def launch(cfg, m, attach=True, cli=None):
     name = sname(m["name"])
     cwd = str(config.member_dir(m["name"]))
     envs = {"MYTEAM_MEMBER": m["name"], "MYTEAM_SESSION": name,
             "MYTEAM_ROLE": m["role"], "MYTEAM_GROUP": cfg["group"],
             "MYTEAM_WORKDIR": cwd,
             "MYTEAM_FOLDERS": os.pathsep.join(config.access_dirs(m))}
-    cmd = m["cmd"] + config.access_args(m)   # --add-dir for claude/codex
+    from . import team
+    if cli is None:
+        cli, _ = team.pick_cli(cfg, m)
+    cmd = team.build_cmd(cfg, m, cli)        # folder flags + auto-edit mode per CLI
+    envs["MYTEAM_CLI"] = cli
     if not tmux_ok():
         print("tmux not found — running without persistence (`brew install tmux`).")
         env = os.environ.copy()
@@ -94,6 +98,11 @@ def send_text(name, text):
     r2 = subprocess.run(["tmux", "send-keys", "-t", name, "Enter"],
                         capture_output=True)
     return r1.returncode == 0 and r2.returncode == 0
+
+
+def send_keys(name, *keys):
+    """Press keys (tmux names, e.g. "Enter", "Down") in a session."""
+    subprocess.run(["tmux", "send-keys", "-t", name] + list(keys), capture_output=True)
 
 
 def kill(name):

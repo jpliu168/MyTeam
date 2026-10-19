@@ -25,10 +25,17 @@ def _render(text, cfg, m):
         "{{STATE}}": str(config.STATE),
         "{{BOSS}}": packs.of(cfg)["boss"],
         "{{UNIT}}": packs.of(cfg)["unit"],
+        "{{MANAGER}}": config.display(_mg(cfg)) if _mg(cfg) else "the manager",
+        "{{MANAGER_ID}}": _mg(cfg)["name"] if _mg(cfg) else "manager",
     }
     for k, v in subs.items():
         text = text.replace(k, v)
     return text
+
+
+def _mg(cfg):
+    from . import team
+    return team.manager(cfg)
 
 
 def _split_frontmatter(text):
@@ -81,11 +88,30 @@ def sources(cfg):
     return out
 
 
+def learned(cfg):
+    """Team-learned skills: ~/myteam/skills/<name>/SKILL.md (everyone gets them)."""
+    d = config.STATE / "skills"
+    if not d.is_dir():
+        return []
+    return [(f.parent.name, f) for f in sorted(d.glob("*/SKILL.md"))]
+
+
+def _duty_skill(cfg, m):
+    from . import team
+    which = "manager-playbook" if team.is_manager(cfg, m) else "specialist-basics"
+    f = config.root() / "skills" / which / "SKILL.md"
+    return (which, f.read_text()) if f.exists() else None
+
+
 def sync(cfg):
     import json
     import shutil
     from . import profile
+    from . import team
+    team.learning_files(cfg)
     shared = sources(cfg)
+    taken = {n for n, _ in shared}
+    shared += [(n, f) for n, f in learned(cfg) if n not in taken]
     prof_name = profile.title(cfg)[0]
     for m in cfg["members"]:
         mdir = config.member_dir(m["name"])
@@ -94,6 +120,9 @@ def sync(cfg):
         all_sources = [("my-role", _role_skill(m, cfg)),
                        (prof_name, profile.skill_text(cfg))] + \
                       [(n, f.read_text()) for n, f in shared]
+        duty = _duty_skill(cfg, m)
+        if duty:
+            all_sources.insert(1, duty)
         sdir = mdir / ".claude" / "skills"
         manifest = sdir / ".myteam-generated.json"
         try:
@@ -114,6 +143,7 @@ def sync(cfg):
             shutil.rmtree(sdir / stale, ignore_errors=True)
         manifest.write_text(json.dumps(sorted(now)))
         (mdir / "AGENTS.md").write_text("\n".join(agents_md) + "\n")
+        (mdir / "GEMINI.md").write_text("\n".join(agents_md) + "\n")   # Gemini CLI reads this
     if profile.filled(cfg) or (config.STATE / "handbook" / (prof_name + ".md")).exists():
         profile.write_handbook(cfg)
     return len(shared) + 2

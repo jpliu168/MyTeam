@@ -28,6 +28,12 @@ def _say(line):
     sys.stdout.flush()
 
 
+def _manager_session(cfg):
+    from . import team
+    mg = team.manager(cfg)
+    return sessions.sname(mg["name"]) if mg else None
+
+
 class Watcher(threading.Thread):
     def __init__(self, cfg):
         super().__init__(daemon=True)
@@ -68,6 +74,9 @@ class Watcher(threading.Thread):
                 frm = rec.get("from", "")
                 if not frm.startswith(sessions.PREFIX):
                     continue  # owner's own messages — no need to echo
+                mg = _manager_session(self.cfg)
+                if mg and rec.get("to") == mg and rec.get("kind") in ("report", "decision"):
+                    self.awaiting[mg] = time.time()   # the manager will summarize
                 if self.watch_traffic:
                     short = lambda s: s[len(sessions.PREFIX):] if s.startswith(sessions.PREFIX) else s
                     text = rec.get("text", "")
@@ -116,9 +125,9 @@ def _target(cfg, token):
 def _send(cfg, watcher, member, text):
     name = sessions.sname(member["name"])
     if name not in sessions.list_sessions():
-        sessions.launch(cfg, member, attach=False)
-        print("  (started {} in the background)".format(member["name"]))
-        time.sleep(1)
+        from . import team
+        print("  (starting {} …)".format(config.display(member)))
+        print("  ({})".format(team.wake(cfg, member, by="owner")))
     outcome = bus.deliver(name, text, sender="owner")
     watcher.expect_reply(name)
     print("  → {}: {}".format(member["name"], outcome))
@@ -126,8 +135,15 @@ def _send(cfg, watcher, member, text):
 
 def room(cfg):
     print("═══ {} — control room ═══".format(cfg["group"]))
-    print("members: " + ", ".join(m["name"] for m in cfg["members"]))
-    print('talk: "sam: <message>" or "@sam <message>" · everyone: "@all <message>"')
+    from . import team
+    mg = team.manager(cfg)
+    if mg:
+        print("just type — it goes to your manager, {}. ".format(config.display(mg)) +
+              "inbox = what needs you · staff = who's on the team")
+    else:
+        print("members: " + ", ".join(m["name"] for m in cfg["members"]))
+        print('talk: "sam: <message>" or "@sam <message>" · everyone: "@all <message>"')
+        print("tip: `myteam manager <member>` lets you talk to one manager instead")
     print('assign <m> <task> · watch on|off (agent↔agent traffic, now ON) · open <m>')
     print("roster · ls · standup · tasks · quit (members keep working)")
     watcher = Watcher(cfg)
@@ -217,9 +233,25 @@ def room(cfg):
                     seen.add(m["name"])
                     _send(cfg, watcher, m, text)
             continue
+        if cmd in ("inbox", "staff"):
+            from . import team
+            print(team.inbox_text(cfg) if cmd == "inbox" else team.staff_text(cfg))
+            continue
+        if cmd in ("approve", "decline") and rest:
+            from . import team
+            parts = rest.split(None, 1)
+            print("  " + team.decide(cfg, parts[0], cmd == "approve",
+                                     parts[1] if len(parts) > 1 else ""))
+            continue
+        from . import team
+        mg = team.manager(cfg)
+        first = raw.split()[0]
         m = _target(cfg, cmd)
-        if m and rest:
+        if m and rest and (not mg or m["name"] == mg["name"] or first[-1] in ":,"):
             _send(cfg, watcher, m, rest)
+            continue
+        if mg:                                   # everything else goes to the manager
+            _send(cfg, watcher, mg, raw)
             continue
         print('  not understood — "sam: <message>", "@all <message>", assign, watch on|off,')
         print("  open <m>, roster, ls, standup, tasks, done <id>, quit")

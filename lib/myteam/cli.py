@@ -6,39 +6,172 @@ import time
 from . import board, bus, config, daemon, roles, sessions, status, wizard
 
 HELP = """\
-myteam — your group of agents: one owner, many roles
+myteam — one manager runs your team of specialist agents; you talk to the manager
 
-  myteam                     first run: found your team; after: THE CONTROL ROOM —
-                            talk to any member ("sam: ..."), broadcast ("@all ..."),
-                            assign tasks, watch agents talk to each other
-  myteam plain               the control room as a plain prompt (no full-screen UI)
-  myteam web                 the control room in your browser (same as `myteam-web`)
-  myteam roster              org chart: members, roles, focus, live status
-  myteam up                  raise the whole team: every member + the daemon, in the background
-  myteam start <member>      start (or resume) a member's session and attach
-  myteam office              ALL members as tabs in one terminal (ctrl-b n/p to switch)
-  myteam attach <member>     attach to a running member
-  myteam ls                  running members with status ● working ◐ blocked ○ idle
-  myteam standup             the morning view: statuses, tasks, fresh deliverables
-  myteam brief               one line per member: what each is doing right now
-  myteam now "text"          (for members) set your one-line "what I'm doing" note
+  myteam                     the control room: just type — it goes to your manager
+                            (advanced: "@bookkeeper ..." talks to a specialist directly)
+  myteam web                 the control room in your browser
+  myteam inbox               what needs YOU: requests to approve, members stuck on a prompt
+  myteam approve <id> | decline <id> ["reason"]
+  myteam up                  start the manager + the daemon (specialists wake on demand)
+  myteam staff               manager, specialists (running/asleep), role catalog, CLIs
+  myteam brief | standup     what everyone is doing / the morning view
+  myteam learned [days]      what the team learned recently (default 7 days)
 
-  myteam hire                add a member        myteam edit <m>    change a role card
-  myteam retire <m>          archive a member (workspace kept in alumni/)
+ setup
+  myteam hire                add a specialist (or `myteam add <role> ["focus"]`)
+  myteam manager <member>    make <member> the manager
+  myteam edit <m> | retire <m>
+  myteam prefs [key value]   max_active · autonomy (ask|catalog|full) · other_clis · auto_edits
 
-  myteam assign <m> "task"   put a task on the board (+notify the member)
-  myteam tasks [m]           open tasks          myteam done <id>   mark finished
+ used by the manager (you can too)
+  myteam add <role> ["focus"] [--cli codex] [--nick Lily]
+  myteam wake <s> ["task"] [--cli claude|codex|gemini]     myteam sleep <s>
+  myteam assign <m> "task" · tasks [m] · done <id>
+  myteam request <kind> "what" ["why"] [--member m --folder path]
+        kinds: folder money public custom-role add remove other
+  myteam skill new <name> "description"     myteam skills sync
+  myteam learned "what changed"
 
-  myteam log [m] [-n N]      communication history (all bus traffic, or one member's)
-  myteam msg <m> "text"      message a member (queued politely if busy)
-  myteam ask <m> "text"      ask and wait for the reply
-  myteam deliver [m]         flush queued messages to idle members now
-  myteam wait <m> | status <m> | kill <m>
+ used by specialists
+  myteam report "done #12: ... in deliverables/..."    myteam now "what I'm doing"
 
-  myteam daemon start|run|status    the mailman/status-watcher (tmux session)
-  myteam skills sync         re-render shared skills + role cards for everyone
-  myteam config              show config path and contents
+ plumbing
+  myteam start|attach <m> · office · ls · roster · log [m] · msg|ask <m> "text"
+  myteam deliver [m] · wait|status|kill <m> · daemon start|run|status · config
 """
+
+
+TEAM_CMDS = ("staff", "add", "wake", "sleep", "report", "request", "inbox", "approve",
+             "decline", "learned", "skill", "prefs", "manager")
+
+
+def _flags(args, names):
+    """Split --name value flags out of args. Returns (positional, {name: value})."""
+    pos, fl, i = [], {}, 0
+    while i < len(args):
+        a = args[i]
+        if a.startswith("--") and a[2:] in names and i + 1 < len(args):
+            fl[a[2:]] = args[i + 1]
+            i += 2
+            continue
+        pos.append(a)
+        i += 1
+    return pos, fl
+
+
+def team_cmd(cmd, args):
+    from . import team, bus
+    cfg = _need_cfg()
+    me = bus.sender_name()
+    if cmd == "staff":
+        print(team.staff_text(cfg))
+        return 0
+    if cmd == "inbox":
+        print(team.inbox_text(cfg))
+        return 0
+    if cmd in ("approve", "decline"):
+        if not args:
+            print("usage: myteam {} <id> [reason]".format(cmd))
+            return 1
+        if me != "owner":
+            print("only the boss decides requests")
+            return 1
+        print(team.decide(cfg, args[0], cmd == "approve", " ".join(args[1:])))
+        return 0
+    if cmd == "manager":
+        if not args:
+            mg = team.manager(cfg)
+            print("manager: {}".format(config.display(mg) if mg else "(none)"))
+            return 0
+        m = _member(cfg, args[0])
+        team.set_manager(cfg, m)
+        print("✓ {} is the manager — plain messages in the control room now go to them".format(
+            config.display(m)))
+        return 0
+    if cmd == "add":
+        pos, fl = _flags(args, ("cli", "nick", "title", "duties"))
+        if not pos:
+            print(team.staff_text(cfg))
+            print("\nusage: myteam add <role> [\"focus\"] [--cli codex] [--nick Lily]")
+            return 1
+        m, msg = team.add_specialist(cfg, pos[0], " ".join(pos[1:]), fl.get("cli"),
+                                     fl.get("nick", ""), by=me, title=fl.get("title", ""),
+                                     duties=fl.get("duties", ""))
+        print(("✓ " if m else "→ ") + msg)
+        return 0
+    if cmd == "wake":
+        pos, fl = _flags(args, ("cli",))
+        if not pos:
+            print("usage: myteam wake <specialist> [\"task\"] [--cli codex]")
+            return 1
+        m = _member(cfg, pos[0])
+        print(team.wake(cfg, m, " ".join(pos[1:]) or None, fl.get("cli")))
+        return 0
+    if cmd == "sleep":
+        if not args:
+            print("usage: myteam sleep <specialist> | all")
+            return 1
+        targets = (team.running_specialists(cfg) if args[0] == "all"
+                   else [_member(cfg, args[0])])
+        for m in targets:
+            if team.is_manager(cfg, m):
+                print("not putting the manager to sleep (use `myteam kill`)")
+                continue
+            print(team.sleep_member(cfg, m))
+        return 0
+    if cmd == "report":
+        if not args:
+            print('usage: myteam report "done #12: ... in deliverables/..."')
+            return 1
+        print(team.report(cfg, me, " ".join(args)))
+        return 0
+    if cmd == "request":
+        pos, fl = _flags(args, ("member", "folder"))
+        if len(pos) < 2:
+            print('usage: myteam request <kind> "what" ["why"] [--member m --folder path]')
+            print("kinds: " + ", ".join(team.KINDS))
+            return 1
+        data = {}
+        if pos[0] == "folder":
+            if not fl.get("folder"):
+                print("folder requests need --folder <path> (and --member <who>)")
+                return 1
+            data = {"folder": fl["folder"], "member": fl.get("member") or me.replace(
+                sessions.PREFIX, "")}
+        elif pos[0] == "remove":
+            data = {"member": fl.get("member", "")}
+        rid = team.file_request(cfg, pos[0], pos[1], " ".join(pos[2:]), by=me, data=data)
+        print("request #{} filed — the boss sees it in `myteam inbox`".format(rid))
+        return 0
+    if cmd == "learned":
+        if args and not args[0].isdigit():
+            team.log_learned(" ".join(args))
+            print("✓ logged in handbook/learning-log.md")
+            return 0
+        rows = team.learned_since(int(args[0]) if args else 7)
+        print("\n".join(rows) if rows else "nothing logged in that period")
+        return 0
+    if cmd == "skill":
+        if len(args) >= 3 and args[0] == "new":
+            path, created = team.new_skill(args[1], " ".join(args[2:]))
+            if created:
+                from . import skills
+                skills.sync(cfg)
+            print("{} {} — fill in the steps, then `myteam skills sync`".format(
+                "✓ created" if created else "= exists:", path))
+            return 0
+        print('usage: myteam skill new <name> "description"')
+        return 1
+    if cmd == "prefs":
+        if len(args) >= 2:
+            v = team.set_pref(cfg, args[0], args[1])
+            print("✓ {} = {}".format(args[0], v))
+        else:
+            for k in team.PREFS:
+                print("  {:<12} {}".format(k, team.pref(cfg, k)))
+        return 0
+    return 1
 
 
 def _need_cfg():
@@ -121,6 +254,8 @@ def _rename_member(cfg, m, new_display):
         for f in busdir.glob("{}.*".format(sessions.sname(old))):
             f.rename(busdir / f.name.replace(sessions.sname(old), sessions.sname(new_slug)))
     board.reassign_owner(old, new_slug)
+    if cfg.get("manager") == old:
+        cfg["manager"] = new_slug
     m["name"] = new_slug
     m["display"] = new_display
     return new_slug
@@ -129,10 +264,17 @@ def _rename_member(cfg, m, new_display):
 def cmd_edit(cfg, token):
     m = _member(cfg, token)
     print("editing {} — press enter to keep the current value".format(config.display(m)))
-    new_name = wizard.ask("display name", config.display(m))
-    if new_name and new_name != config.display(m):
-        _rename_member(cfg, m, new_name)
-        print("  ✓ now shown as '{}'".format(config.display(m)))
+    from . import team
+    if team.is_manager(cfg, m):
+        new_name = wizard.ask("manager's name", config.display(m))
+        if new_name and new_name != config.display(m):
+            _rename_member(cfg, m, new_name)
+    else:
+        nick = wizard.ask("nickname (optional, '-' to clear)", m.get("display") or "")
+        if nick == "-":
+            m.pop("display", None)
+        elif nick:
+            m["display"] = nick
     from . import packs
     lib = roles.for_pack(packs.of(cfg)["id"])
     menu = roles.menu(packs.of(cfg)["id"])
@@ -213,6 +355,8 @@ def main(argv=None):
     if cmd in ("-h", "--help", "help"):
         print(HELP)
         return 0
+    if cmd in TEAM_CMDS:
+        return team_cmd(cmd, args)
     cfg = _need_cfg()
     if cmd == "roster":
         return cmd_roster(cfg)
@@ -246,21 +390,22 @@ def main(argv=None):
             print("`myteam up` needs tmux (conda install -c conda-forge tmux)")
             return 1
         live = sessions.list_sessions()
-        for m in cfg["members"]:
+        from . import team
+        mg = team.manager(cfg)
+        for m in ([mg] if mg else cfg["members"]):
             name = sessions.sname(m["name"])
             if name in live:
                 print("  = {} already running".format(m["name"]))
             else:
-                sessions.launch(cfg, m, attach=False)
-                print("  ✓ {} started ({})".format(m["name"], m["role"]))
+                print("  ✓ " + team.wake(cfg, m))
         me = config.root() / "bin" / "myteam"
         if sessions.run_daemon_session('"{}" daemon run'.format(me)):
             print("  ✓ daemon started")
         else:
             print("  = daemon already running")
-        print("team is up — `myteam ls` for statuses, `myteam attach <m>` to visit,")
-        print("note: a member's FIRST ever start may sit ◐ blocked on its CLI's")
-        print("trust prompt — `myteam attach <m>` once to answer it.")
+        print("team is up — your manager is in; specialists wake when the manager needs them."
+              if mg else "team is up — tip: `myteam manager <member>` to run the team through one manager.")
+        print("talk to them: `myteam` (or `myteam web`) · what needs you: `myteam inbox`")
         return 0
     if cmd == "office":
         name = sessions.build_office()

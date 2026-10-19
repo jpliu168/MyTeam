@@ -7,7 +7,7 @@ from . import config, packs, roles
 BANNER = r"""
   __  __       _____
  |  \/  |_   _|_   _|__  __ _ _ __ ___    your team · your agents
- | |\/| | | | || |/ _ \/ _` | '_ ` _ \    one owner · many roles
+ | |\/| | | | || |/ _ \/ _` | '_ ` _ \    you · one manager · specialists
  | |  | | |_| || |  __/ (_| | | | | | |
  |_|  |_|\__, ||_|\___|\__,_|_| |_| |_|   forked from MyLab
          |___/
@@ -59,48 +59,76 @@ def ask_folders(m, current=None):
 
 
 def hire(cfg):
-    """Add one member interactively. Returns the member dict or None."""
-    print("\n-- Hire a member --")
-    display = ask("member's name (e.g. Sam)")
-    name = _slug(display)
-    if not name:
-        return None
-    if config.member(cfg, name):
-        print("  '{}' already exists — use `myteam edit {}`".format(name, name))
-        return None
-    lib = roles.for_pack(packs.of(cfg)["id"])
-    i = choose("role?", roles.menu(packs.of(cfg)["id"]))
+    """Add one specialist interactively (role + focus; a nickname is optional).
+    Returns the member dict or None."""
+    from . import team
+    print("\n-- Add a specialist --  (no name needed: a role + a focus)")
+    pid = packs.of(cfg)["id"]
+    lib = [t for t in roles.for_pack(pid) if t["id"] not in team.MANAGER_ROLES]
+    i = choose("role?", ["{} — {}".format(t["id"], t["title"]) for t in lib]
+               + ["custom — define your own role"])
+    custom_instructions = ""
     if i < len(lib):
-        tpl = lib[i]
-        role, role_title = tpl["id"], tpl["title"]
-        custom_instructions = ""
+        role, role_title = lib[i]["id"], lib[i]["title"]
     else:
         role = _slug(ask("custom role id (e.g. field-work)"))
+        if not role:
+            return None
         role_title = ask("one-line role title")
         custom_instructions = ask("describe the role's duties (one paragraph)")
-    focus = ask("area of focus for {} (one sentence, or blank)".format(name), "")
-    j = choose("which agent CLI runs this member?",
-               ["{}{}".format(label, "  (installed ✓)" if shutil.which(cid) else "")
-                if cid != "custom" else label
-                for cid, label in AGENT_CLIS])
-    cid = AGENT_CLIS[j][0]
-    cmd = cid if cid != "custom" else ask("command to launch it (e.g. `gemini`)")
-    if not cmd:
-        print("  no command given — member not hired")
-        return None
-    m = {"name": name, "display": display.strip() or name, "role": role,
-         "role_title": role_title, "focus": focus, "agent": cid, "cmd": cmd}
+    focus = ask("focus (one sentence, or blank)", "")
+    nick = ask("nickname (optional — blank is fine)", "")
+    cid, cmd = "claude", "claude"
+    extra = [c for c in team.installed_clis() if c != "claude"]
+    if extra:
+        opts = [("claude", "Claude Code (default)")] + [(c, team.CLIS[c]["label"]) for c in extra] \
+            + [("custom", "another agent CLI (type the command)")]
+        j = choose("default agent CLI? (the manager can still pick per job)",
+                   [l for _, l in opts])
+        cid = opts[j][0]
+        cmd = team.CLIS[cid]["bin"] if cid != "custom" else ask("command to launch it")
+        if not cmd:
+            return None
+    name = team.specialist_id(cfg, role, focus)
+    m = {"name": name, "role": role, "role_title": role_title, "focus": focus,
+         "agent": cid, "cmd": cmd}
+    if nick:
+        m["display"] = nick
     if custom_instructions:
         m["instructions"] = custom_instructions
     folders = ask_folders(m)
     if folders:
         m["folders"] = folders
-    if cid == "custom" and folders:
-        print("  note: a custom CLI isn't given folder flags — it gets $MYTEAM_FOLDERS"
-              " and the list in its AGENTS.md")
     cfg["members"].append(m)
-    print("  ✓ hired {} ({}) — working folder {}".format(
-        m["display"], role, config.member_dir(name)))
+    print("  ✓ added {} ({}) — working folder {}".format(
+        name, role_title, config.member_dir(name)))
+    return m
+
+
+def make_manager(cfg):
+    """Ask for the manager's name; create the manager member. Returns it."""
+    from . import team
+    boss = packs.of(cfg)["boss"]
+    print("\nYour manager is the one agent you talk to. They run the team for you:")
+    print("they bring in specialists when a job needs them and report back to you.")
+    display = ""
+    while not display:
+        display = ask("Name your manager (e.g. Alex)", "Alex").strip()
+    key = _slug(display)
+    if not key or config.member(cfg, key):
+        n = 1
+        while config.member(cfg, "manager-{}".format(n) if n > 1 else "manager"):
+            n += 1
+        key = "manager-{}".format(n) if n > 1 else "manager"
+    rid = team.manager_role(cfg)
+    tpl = roles.by_id(rid, packs.of(cfg)["id"])
+    m = {"name": key, "display": display, "role": rid,
+         "role_title": tpl["title"] if tpl else "Manager",
+         "focus": "running the {} for the {}".format(packs.of(cfg)["unit"], boss),
+         "agent": "claude", "cmd": "claude"}
+    cfg["members"].append(m)
+    cfg["manager"] = key
+    print("  ✓ {} is your manager".format(display))
     return m
 
 
@@ -115,22 +143,26 @@ def first_run():
     cfg["group"] = group
     cfg["pack"] = pack["id"]
     cfg["members"] = []
-    print("\nNow hire your team — as many members as you want; you can always")
-    print("`myteam hire`, `myteam edit` or `myteam retire` later.")
-    while True:
+    make_manager(cfg)
+    from . import team
+    others = [c for c in team.installed_clis() if c != "claude"]
+    if others:
+        yn = ask("{} found — may the manager use it for some jobs? (y/n)".format(
+            " and ".join(team.CLIS[c]["label"] for c in others)), "y")
+        cfg.setdefault("prefs", {})["other_clis"] = yn.lower().startswith("y")
+    print("\nSpecialists (bookkeeper, writer, researcher ...) don't need names — your")
+    print("manager adds and wakes them as jobs need. You can also add some now.")
+    while ask("add a specialist now? (y/n)", "n").lower().startswith("y"):
         hire(cfg)
-        if not ask("hire another member? (y/n)", "y" if not cfg["members"] else "n"
-                   ).lower().startswith("y"):
-            break
     config.save(cfg)
     config.shared_dirs()
     from . import skills
     skills.sync(cfg)
     _seed_handbook(cfg)
-    print("\n✓ {} is founded: {} member(s), config in {}".format(
-        group, len(cfg["members"]), config.CONFIG))
+    print("\n✓ {} is founded — manager {}, {} specialist(s); config in {}".format(
+        group, config.display(cfg["members"][0]), len(cfg["members"]) - 1, config.CONFIG))
     print("✓ shared skills + role instructions rendered for every member")
-    print("\nNext:  myteam roster   |  myteam start <member>  |  myteam assign <member> \"task\"")
+    print("\nNext:  myteam up   (start your manager)   then   myteam   (talk to them)")
     return cfg
 
 

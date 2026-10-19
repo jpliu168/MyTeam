@@ -80,6 +80,7 @@ def member_dir(name):
 
 # Shared team folders every member may read/write besides its own working folder.
 SHARED_ACCESS = ("deliverables", "handbook", "bus")
+# (plus ~/myteam/skills — the team's learned skills; see access_dirs)
 
 
 def parse_folders(text):
@@ -117,20 +118,13 @@ def member_folders(m):
 def access_dirs(m):
     """Everything besides the working folder this member's agent may use."""
     shared = [str(d) for k, d in shared_dirs().items() if k in SHARED_ACCESS]
+    shared.append(str(STATE / "skills"))      # team-learned skills (everyone may improve them)
     return shared + [f for f in member_folders(m) if f not in shared]
-
-
-def access_args(m):
-    """CLI flags granting access_dirs(m), for agents that support it."""
-    import shlex
-    if m.get("agent") not in ("claude", "codex"):
-        return ""
-    return "".join(" --add-dir " + shlex.quote(d) for d in access_dirs(m))
 
 
 def shared_dirs():
     out = {}
-    for sub in ("deliverables", "handbook", "bus", "alumni"):
+    for sub in ("deliverables", "handbook", "bus", "alumni", "skills"):
         d = STATE / sub
         d.mkdir(parents=True, exist_ok=True)
         out[sub] = d

@@ -103,6 +103,11 @@ class Hub:
                     except ValueError:
                         continue
                     frm = rec.get("from", "")
+                    from . import team
+                    mg = team.manager(self.cfg)
+                    if mg and rec.get("to") == sessions.sname(mg["name"]) and \
+                            rec.get("kind") in ("report", "decision"):
+                        self.awaiting[rec["to"]] = time.time()   # the manager will summarize
                     if frm.startswith(sessions.PREFIX):
                         self.add("traffic", "{} → {} [{}] {}".format(
                             short(frm), short(rec.get("to", "?")),
@@ -157,7 +162,8 @@ class Hub:
         name = sessions.sname(m["name"])
         if name in sessions.list_sessions():
             return False
-        sessions.launch(self.cfg, m, attach=False)
+        from . import team
+        self.add("sys", team.wake(self.cfg, m, by="owner"))   # clears first-run trust prompt
         return True
 
     def send(self, m, text):
@@ -174,7 +180,10 @@ class Hub:
         if not sessions.tmux_ok():
             self.add("err", "needs tmux (conda install -c conda-forge tmux)")
             return
-        started = [config.display(m) for m in self.cfg["members"] if self.start(m)]
+        from . import team
+        mg = team.manager(self.cfg)
+        started = [config.display(m) for m in ([mg] if mg else self.cfg["members"])
+                   if self.start(m)]
         me = config.root() / "bin" / "myteam"
         sessions.run_daemon_session('"{}" daemon run'.format(me))
         self.add("sys", "started: {} (daemon running)".format(", ".join(started))
@@ -241,15 +250,31 @@ class Hub:
             bad = [t for t, m in zip(mentions, targets) if m is None]
             if bad and not any(t.lower() == "all" for t in mentions):
                 self.add("err", "no member: {}".format(", ".join(bad)))
+        elif cmd in ("inbox", "staff"):
+            from . import team
+            self.add("sys", team.inbox_text(self.cfg) if cmd == "inbox"
+                     else team.staff_text(self.cfg))
+        elif cmd in ("approve", "decline") and rest:
+            from . import team
+            parts = rest.split(None, 1)
+            self.add("sys", team.decide(self.cfg, parts[0], cmd == "approve",
+                                        parts[1] if len(parts) > 1 else ""))
         else:
+            from . import team
+            mg = team.manager(self.cfg)
+            first = raw.split()[0]
             m = self.target(cmd)
-            if m and rest:
+            if m and rest and (not mg or m["name"] == mg["name"] or first[-1] in ":,"):
                 self.send(m, rest.lstrip(",:; "))
+            elif mg:                             # everything else goes to the manager
+                self.send(mg, raw)
             else:
                 self.add("err", "not understood — try `help`")
 
 
-HELP = """talk      sam: <msg> · @sam <msg> · @sam @amy <msg> · @all <msg>
+HELP = """talk      just type — it goes to your manager
+you       inbox · approve <id> · decline <id> [reason] · staff
+direct    bookkeeper: <msg> · @writer <msg> · @all <msg>   (talk to a specialist yourself)
 board     assign <m> <task> · tasks · done <id>
 views     brief · standup · roster
 run       up = start everyone · start <m>
@@ -267,6 +292,7 @@ AGENTS = [("claude", "Claude Code"), ("codex", "Codex"), ("custom", "Other agent
 
 def setup_info(cfg):
     import shutil
+    from . import team
     return {
         "group": cfg["group"], "lang": cfg.get("prefs", {}).get("lang", "en"),
         "pack": packs.of(cfg)["id"],
@@ -287,7 +313,8 @@ def setup_info(cfg):
                      "role_zh": roles.zh(m["role"]), "role_title": m.get("role_title", ""), "instructions": m.get("instructions", ""),
                      "focus": m.get("focus", ""), "agent": m.get("agent", ""), "cmd": m.get("cmd", ""),
                      "workdir": str(config.member_dir(m["name"])),
-                     "folders": config.member_folders(m)}
+                     "folders": config.member_folders(m),
+                     "manager": team.is_manager(cfg, m)}
                     for m in cfg["members"]],
         "state": str(config.STATE),
     }
@@ -332,10 +359,12 @@ def setup_action(hub, action, b):
         msg = "team renamed to {}".format(g)
     elif action == "hire":
         import re as _re
+        from . import team
         disp = (b.get("display") or "").strip()
-        if not disp:
-            return False, "please give the member a name"
-        key = _re.sub(r"[^a-z0-9-]+", "-", disp.lower()).strip("-")
+        rid = (b.get("role") or "").rpartition(":")[2] or b.get("custom_id") or "specialist"
+        key = (_re.sub(r"[^a-z0-9-]+", "-", disp.lower()).strip("-") if disp
+               else team.specialist_id(cfg, _re.sub(r"[^a-z0-9-]+", "-", rid.lower()).strip("-")
+                                       or "specialist", b.get("focus") or ""))
         if not key:                         # e.g. a Chinese name: internal key member-N,
             n = 1                           # the name you see and type stays as written
             while config.member(cfg, "member-{}".format(n)):
@@ -343,20 +372,31 @@ def setup_action(hub, action, b):
             key = "member-{}".format(n)
         if config.member(cfg, key) or any(config.display(x) == disp for x in cfg["members"]):
             return False, "'{}' already exists".format(disp)
-        m = {"name": key, "display": disp}
+        m = {"name": key, "display": disp} if disp else {"name": key}
         try:
             _apply_card(m, b, cfg)
         except ValueError as e:
             return False, str(e)
         cfg["members"].append(m)
-        msg = "hired {} ({})".format(disp, m["role"])
+        msg = "added {} ({})".format(config.display(m), m["role"])
+    elif action == "manager":
+        from . import team
+        m = config.member(cfg, b.get("name") or "")
+        if not m:
+            return False, "no such member"
+        team.set_manager(cfg, m)
+        msg = "{} is now the manager".format(config.display(m))
     elif action == "edit":
         m = config.member(cfg, b.get("name") or "")
         if not m:
             return False, "no such member"
         disp = (b.get("display") or "").strip()
         if disp and disp != config.display(m):
-            _rename_member(cfg, m, disp)
+            from . import team
+            if team.is_manager(cfg, m):
+                _rename_member(cfg, m, disp)
+            else:
+                m["display"] = disp          # specialists keep their role id; nickname only
         try:
             _apply_card(m, b, cfg)
         except ValueError as e:

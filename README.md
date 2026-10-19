@@ -1,9 +1,38 @@
 # MyTeam
 
-**A team of agents for a small business or a one-person company: one owner,
-many roles.** Same core as MyLab (control room, task board, message bus,
-standup, shared handbook and deliverables), with business roles instead of
-research ones.
+**You talk to one manager; the manager runs a team of specialist agents that
+know your organization and get better at its work every week.** For a small
+business, a one-person company, a research lab, a course, or a nonprofit.
+See [DESIGN.md](DESIGN.md) for the why and the rules.
+
+## How it works (v0.2)
+
+- **You talk only to your manager** (you name them at setup). Just type in
+  `myteam` or `myteam web` — plain messages go to the manager.
+- **Specialists have no names** — a role and a focus (bookkeeper,
+  copywriter-grant-letters, lit-scout). The manager adds them from the role
+  catalog, wakes 1–3 for a job, and puts them to sleep when done. Their
+  folders and notebooks persist, so they remember past jobs.
+- **Specialists report to the manager**, who checks the work and gives you
+  one summary with a short "needs your decision" list.
+- **You keep two things:** access to folders outside ~/myteam, and anything
+  involving money or the outside world. The manager files a request;
+  `myteam inbox` → `approve <id>` / `decline <id>`.
+- **Claude Code is all you need.** If Codex or Gemini CLI is installed, the
+  manager may use it for some jobs (`handbook/routing.md`); if it fails, the
+  job falls back to Claude Code.
+- **The team learns:** your corrections go to `handbook/preferences.md`,
+  each specialist keeps a `NOTEBOOK.md`, repeated jobs become team skills in
+  `~/myteam/skills/`, and every Monday the manager tidies all of it and tells
+  you what the team learned (`myteam learned`).
+
+```bash
+myteam up        # start your manager (+ the daemon)
+myteam           # talk to them
+myteam inbox     # what needs you
+myteam staff     # who's on the team, who's running, the role catalog
+myteam prefs     # max_active (3) · autonomy (ask|catalog|full) · other_clis · auto_edits
+```
 
 ## Install & found your team
 
