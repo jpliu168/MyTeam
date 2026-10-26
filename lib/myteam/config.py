@@ -1,4 +1,4 @@
-"""MyTeam config & state. Everything lives under ~/myteam/ (override: MYTEAM_STATE).
+"""MyTeam config & state. Default team in ~/myteam/, other profiles in ~/myteam/profiles/<name>/ (see profiles.py).
 
 A visible folder, deliberately: the owner browses deliverables/ and handbook/ in
 Finder. (_migrate is inherited from MyLab; harmless — there is no old hidden ~/.myteam.)
@@ -9,7 +9,10 @@ import re
 import shutil
 from pathlib import Path
 
-STATE = Path(os.environ.get("MYTEAM_STATE", str(Path.home() / "myteam")))
+from . import profiles
+
+# Which team this process works on — see profiles.py (default: ~/myteam).
+PROFILE, STATE = profiles.CURRENT, profiles.STATE
 CONFIG = STATE / "config.json"
 
 _OLD_STATE = Path.home() / ".myteam"
@@ -17,7 +20,7 @@ _OLD_STATE = Path.home() / ".myteam"
 
 def _migrate():
     """One-time move of a pre-v0.1.1 hidden ~/.myteam to the visible location."""
-    if "MYTEAM_STATE" in os.environ:
+    if PROFILE != profiles.DEFAULT or STATE != Path.home() / "myteam":
         return
     if _OLD_STATE.is_dir() and (_OLD_STATE / "config.json").exists() \
             and not CONFIG.exists():
@@ -61,6 +64,10 @@ def save(cfg):
     tmp = CONFIG.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(cfg, indent=2) + "\n")
     tmp.replace(CONFIG)
+    try:
+        profiles.register(PROFILE, STATE)
+    except OSError:
+        pass
 
 
 def member(cfg, name):

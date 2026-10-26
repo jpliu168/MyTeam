@@ -41,6 +41,41 @@ RESEARCH = [
     ("rules", "PI's rules for the lab", "PI 给团队的规矩", "things agents must always / never do", True),
     ("notes", "Anything else", "其他", "background the team should know", True),
 ]
+RESEARCH_ADMIN = [
+    ("legal_name", "Office name", "办公室名称", "e.g. Office of Research Development", False),
+    ("institution", "Institution", "学校", "e.g. NC State University", False),
+    ("director", "Director", "负责人", "name, title (e.g. Associate Vice Chancellor for Research Development)", False),
+    ("mission", "What the office does", "办公室职能", "one or two sentences", True),
+    ("units", "Who you serve", "服务对象", "colleges, departments, centers; faculty count if useful", True),
+    ("priorities", "Strategic research priorities", "重点研究方向", "areas the university is pushing", True),
+    ("sponsors", "Target sponsors", "重点资助方", "agencies, programs, foundations, industry partners", True),
+    ("process", "Internal process & deadlines", "内部流程与截止", "routing lead time, limited-submission process, sponsored programs office", True),
+    ("people", "Staff", "人员", "humans in the office and their roles", True),
+    ("tools", "Systems & sources", "系统与数据源", "e.g. Pivot-RP, InfoReady, Grants.gov, OpenAlex, RePORTER, directory", True),
+    ("channels", "News & social channels", "新闻与社媒渠道", "website, newsletter, LinkedIn/X/Instagram accounts", False),
+    ("voice", "Voice", "语气", "e.g. clear, upbeat, AP style, university brand", False),
+    ("goals", "Goals this year", "今年目标", "e.g. +20% federal submissions; 3 center-scale bids", True),
+    ("rules", "Director's rules for the team", "给团队的规矩", "things agents must always / never do", True),
+    ("notes", "Anything else", "其他", "background the team should know", True),
+]
+ACADEMIC_ADMIN = [
+    ("legal_name", "College / department name", "学院/系名称", "e.g. Department of Marine, Earth & Atmospheric Sciences", False),
+    ("institution", "Institution & college", "学校与学院", "e.g. NC State University, College of Sciences", False),
+    ("leader", "Dean / department head", "院长 / 系主任", "name, title, term, one-line bio", False),
+    ("mission", "Mission & identity", "使命与定位", "one or two sentences: what the unit is known for", True),
+    ("people", "Faculty & staff", "教职工", "counts by rank, key staff and their roles, associate deans/heads", True),
+    ("programs", "Degree programs & students", "学位项目与学生", "BS/MS/PhD programs, enrollment, accreditation", True),
+    ("research", "Research strengths", "科研优势", "areas, centers, expenditures (roughly)", True),
+    ("budget", "Budget & resources (summary)", "预算与资源（概要）", "size, main sources, open lines, space pressures", True),
+    ("priorities", "Strategic priorities", "战略重点", "strategic plan goals; what the provost/dean watches", True),
+    ("calendar", "Key cycles & deadlines", "关键周期与截止", "P&T, searches, budget requests, catalog, assessment reports", True),
+    ("committees", "Committees & governance", "委员会与治理", "standing committees, faculty meeting rhythm, bylaws", True),
+    ("channels", "Website & channels", "网站与渠道", "website, newsletter, social accounts, alumni lists", False),
+    ("voice", "Voice", "语气", "e.g. collegial, clear, transparent", False),
+    ("goals", "Goals this year", "今年目标", "e.g. 3 hires; launch new MS; ABET visit ready", True),
+    ("rules", "Dean/head's rules for the team", "给团队的规矩", "things agents must always / never do", True),
+    ("notes", "Anything else", "其他", "background the team should know", True),
+]
 TEACHING = [
     ("legal_name", "Course code & title", "课程代码与名称", "e.g. MEA 591-004 Generative AI for Science", False),
     ("institution", "Institution & department", "学校与院系", "e.g. NC State University, MEAS", False),
@@ -85,10 +120,13 @@ FREELANCE = [
     ("notes", "Anything else", "其他", "background the team should know", True),
 ]
 FIELDS = BUSINESS
-BY_PACK = {"business": BUSINESS, "research": RESEARCH, "teaching": TEACHING,
+BY_PACK = {"business": BUSINESS, "research": RESEARCH, "research-admin": RESEARCH_ADMIN,
+           "academic-admin": ACADEMIC_ADMIN, "teaching": TEACHING,
            "nonprofit": NONPROFIT, "freelance": FREELANCE}
 TITLE = {"business": ("company-profile", "company profile", "公司简介"),
          "research": ("lab-profile", "lab profile", "实验室简介"),
+         "research-admin": ("office-profile", "office profile", "办公室简介"),
+         "academic-admin": ("unit-profile", "college/department profile", "院系简介"),
          "teaching": ("course-profile", "course profile", "课程简介"),
          "nonprofit": ("organization-profile", "organization profile", "组织简介"),
          "freelance": ("practice-profile", "practice profile", "业务简介")}

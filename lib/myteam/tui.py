@@ -52,6 +52,9 @@ S = {
         "members": "MEMBERS",
         "manager_hdr": "MANAGER",
         "spec_hdr": "SPECIALISTS",
+        "spec_none": "none yet — added as jobs need",
+        "avail_hdr": "{} CAN BRING IN",
+        "avail_hdr0": "AVAILABLE ROLES",
         "asleep": "asleep",
         "needs_you": "needs you",
         "shortcuts": "SHORTCUTS",
@@ -69,7 +72,7 @@ S = {
         ],
         "queued": "queued msgs",
         "opentasks": "open tasks ",
-        "hint": " Tab complete · ↑↓ history · PgUp/Dn scroll · setup · help · quit · watch {} ",
+        "hint": " Tab complete · ↑↓ history · ←→ Home End edit · PgUp/Dn scroll · setup · help · quit · watch {} ",
         "welcome": ("Welcome to the {} control room. Just type — it goes to your "
                     "manager, {mgr}. `inbox` = what needs you · `help` = all commands."),
         "notunderstood": "not understood — try `help`",
@@ -88,6 +91,7 @@ S = {
             "run       up = start the manager · start <m> = start one · open <m> = start+enter",
             "visit     open <m> = step into their terminal · RETURN: press ctrl-b, then d",
             "setup     hire/edit/retire members, change their agent CLI, language, skills",
+            "profiles  list = your teams (profiles) · use <name> = switch to another one",
             "keys      Tab complete · up/down history · PgUp/PgDn scroll feed",
             "leave     quit  (members keep working in the background)",
             "'delivered' = typed into their terminal; the reply prints here when they finish.",
@@ -101,7 +105,7 @@ S = {
             "  4) language / 语言  (current: {})",
             "  5) re-render shared skills for everyone",
             "  6) profile (who you are — company, lab, course … — every member reads it)",
-            "  7) field preset (business / research lab / teaching / nonprofit / freelance)",
+            "  7) field preset (business / research lab / research office / dean·dept head / teaching / nonprofit / freelance)",
             "  0) back to the control room",
         ],
         "setup_which": "which member",
@@ -116,6 +120,9 @@ S = {
         "members": "成员",
         "manager_hdr": "经理",
         "spec_hdr": "专家",
+        "spec_none": "暂无 — 经理会按需添加",
+        "avail_hdr": "{} 可调用",
+        "avail_hdr0": "可用角色",
         "asleep": "休眠",
         "needs_you": "待你决定",
         "shortcuts": "快捷操作",
@@ -133,7 +140,7 @@ S = {
         ],
         "queued": "待送消息",
         "opentasks": "未完任务",
-        "hint": " Tab 补全 · ↑↓ 历史 · PgUp/Dn 翻页 · setup 设置 · help 帮助 · quit 退出 · watch {} ",
+        "hint": " Tab 补全 · ↑↓ 历史 · ←→ 移动光标 · PgUp/Dn 翻页 · setup 设置 · help 帮助 · quit 退出 · watch {} ",
         "welcome": "欢迎来到 {} 控制室。直接输入即可与经理 {mgr} 对话；`inbox` 查看待你处理的事；`help` 查看全部命令。",
         "notunderstood": "没看懂 — 试试 `help`",
         "back": "（已返回控制室）",
@@ -150,6 +157,7 @@ S = {
             "启动      up = 启动经理 · start <成员> = 启动某位 · open <成员> = 启动并进入",
             "探访      open <成员> = 进入其终端 · 返回：先按 ctrl-b，再按 d",
             "设置      setup：聘用/编辑/退休成员、更换其 agent CLI、语言、技能",
+            "多团队    list = 你的各个团队（profile）· use <名称> = 切换到另一个团队",
             "按键      Tab 补全 · ↑↓ 历史 · PgUp/PgDn 翻页",
             "离开      quit（成员在后台继续工作）",
             "'delivered' = 已送入其终端；对方完成后回复会显示在这里。",
@@ -163,7 +171,7 @@ S = {
             "  4) 语言 / language（当前：{}）",
             "  5) 为所有成员重新生成共享技能",
             "  6) 简介（公司、实验室、课程等 — 每位成员都会读）",
-            "  7) 领域预设（企业 / 科研实验室 / 教学 / 非营利 / 自由职业）",
+            "  7) 领域预设（企业 / 科研实验室 / 科研管理办公室 / 院系领导 / 教学 / 非营利 / 自由职业）",
             "  0) 返回控制室",
         ],
         "setup_which": "哪位成员",
@@ -184,7 +192,7 @@ ROLE_ZH = roles.ZH
 STATUS_ZH = {"working": "工作中", "blocked": "待处理", "idle": "空闲",
              "off": "未运行", "gone": "已退出"}
 
-C_TITLE, C_OK, C_WORK, C_BLOCK, C_DIM, C_PI, C_TRAFFIC, C_REPLY = range(1, 9)
+C_TITLE, C_OK, C_WORK, C_BLOCK, C_DIM, C_PI, C_TRAFFIC, C_REPLY, C_MGR = range(1, 10)
 
 
 class Room:
@@ -194,7 +202,9 @@ class Room:
         self.feed = []            # list of (color, text, gid) — gid marks UI text
         self._gid = 0             # that is re-translated when the language changes
         self.scroll = 0           # lines from bottom
-        self.input = ""
+        self._input = ""
+        self.cur = 0              # cursor position inside the input line
+        self._hscroll = 0         # first visible char of a long input line
         self.history = []
         self.hist_i = None
         self.watch_traffic = True
@@ -208,6 +218,35 @@ class Room:
         self.lang = lang_of(cfg)
         self.S = S.get(self.lang, S["en"])
         self._prime_offsets()
+
+    @property
+    def input(self):
+        return self._input
+
+    @input.setter
+    def input(self, v):
+        self._input = v
+        self.cur = len(v)
+
+    def _insert(self, text):
+        self._input = self._input[:self.cur] + text + self._input[self.cur:]
+        self.cur += len(text)
+
+    def _word_left(self):
+        i = self.cur
+        while i > 0 and self._input[i - 1] == " ":
+            i -= 1
+        while i > 0 and self._input[i - 1] != " ":
+            i -= 1
+        return i
+
+    def _word_right(self):
+        i, n = self.cur, len(self._input)
+        while i < n and self._input[i] == " ":
+            i += 1
+        while i < n and self._input[i] != " ":
+            i += 1
+        return i
 
     # ---------- data ----------
     def _prime_offsets(self):
@@ -317,7 +356,7 @@ class Room:
             if st == "idle":
                 del self.awaiting[name]
                 self.say("── {} ──".format(self.short(name)), C_REPLY)
-                for l in status.clean_reply(sessions.tail(name, 60)):
+                for l in sessions.reply_of(name, since=sent):
                     self.say("  " + l, 0)
                 self.say("── end {0} · `open {0}` for the full screen ──".format(
                     self.short(name)), C_REPLY)
@@ -362,6 +401,28 @@ class Room:
         rest = raw[len(raw.split()[0]):].strip()
         if cmd in ("quit", "exit", "q"):
             return False
+        if cmd in ("list", "profiles") and not rest:
+            import contextlib
+            import io
+            from .cli import cmd_list
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                cmd_list()
+            for l in buf.getvalue().splitlines():
+                self.say(l, C_DIM)
+            return True
+        if cmd == "use" and rest and len(rest.split()) == 1:
+            from . import profiles
+            name = profiles.slug(rest)
+            known = {n: c for n, _st, c in profiles.all_profiles()}
+            if name == config.PROFILE:
+                self.say("already on profile '{}'".format(name), C_DIM)
+                return True
+            if known.get(name):                 # existing team: switch rooms
+                global SWITCH_TO
+                SWITCH_TO = name
+                return False
+            # unknown word after "use": treat as a normal message (fall through)
         if cmd in ("help", "h"):
             for i in range(len(self.S["help"])):
                 self.say_ui("help:{}".format(i), C_DIM)
@@ -589,6 +650,8 @@ class Room:
 
     # ---------- completion ----------
     def complete(self):
+        if self.cur != len(self._input):
+            return
         words = self.input.split()
         if not words or self.input.endswith(" "):
             return
@@ -646,7 +709,12 @@ class Room:
                 tail += "  " + brief.ago(r["ts"])
             doing = r["doing"] or ("—" if r["status"] != "off" else self.S["brief_off"])
             self._put(y, x, g, curses.color_pair(col))
-            self._put(y, x + 2, fit(head, width - 2), curses.A_BOLD)
+            from . import team
+            mg = team.manager(self.cfg)
+            is_mgr = bool(mg) and m["name"] == mg["name"]
+            self._put(y, x + 2, fit(head, width - 2),
+                      curses.A_BOLD | curses.color_pair(C_MGR) if is_mgr
+                      else curses.A_NORMAL)
             room = width - 2 - cols(head)
             if room > 4:
                 self._put(y, x + 2 + cols(head), fit(doing + tail, room))
@@ -692,8 +760,11 @@ class Room:
                 if row < h - 3:
                     star = "★ " if mg and m is mg else ""
                     scr.addnstr(row, 1, g, 2, curses.color_pair(col))
-                    scr.addnstr(row, 3, fit(star + config.display(m), 14), side - 4,
-                                curses.A_BOLD)
+                    is_mgr = bool(mg) and m is mg
+                    # only the manager is highlighted; specialists stay plain
+                    scr.addnstr(row, 3, fit(" " + star + config.display(m) + " ", 16), side - 4,
+                                curses.A_BOLD | curses.color_pair(C_MGR) if is_mgr
+                                else curses.A_NORMAL)
                     if st == "off" and mg and m is not mg:
                         st_lbl = self.S["asleep"]
                     elif self.lang == "zh":
@@ -702,9 +773,31 @@ class Room:
                         st_lbl = st
                     role_lbl = ROLE_ZH.get(m["role"], m["role"]) if self.lang == "zh" \
                         else m["role"]
-                    scr.addnstr(row + 1, 3, "{} {}".format(st_lbl, role_lbl),
-                                side - 4, curses.color_pair(C_DIM))
+                    scr.addnstr(row + 1, 3, "{} ({})".format(role_lbl, st_lbl), side - 4,
+                                curses.A_BOLD | curses.color_pair(C_TRAFFIC) if is_mgr
+                                else curses.A_NORMAL)
                     row += 2
+            if not ms and row < h - 3:
+                scr.addnstr(row, 3, self.S["spec_none"], side - 4, curses.color_pair(C_DIM))
+                row += 1
+            row += 1
+        # roles the manager can still bring in (same list as the web sidebar)
+        from . import packs, roles as _roles
+        hired = {m["role"] for m in self.cfg["members"]}
+        avail = [t["id"] for t in _roles.for_pack(packs.of(self.cfg)["id"])
+                 if t["id"] not in team.MANAGER_ROLES and t["id"] not in hired]
+        if avail and row < h - 6:
+            hdr = (self.S["avail_hdr"].format(config.display(mg).upper() if self.lang != "zh"
+                                              else config.display(mg))
+                   if mg else self.S["avail_hdr0"])
+            scr.addnstr(row, 1, "{} ({})".format(hdr, len(avail)), side - 2, curses.A_BOLD)
+            row += 1
+            for rid in avail:
+                if row >= h - 6:
+                    break
+                lbl = ROLE_ZH.get(rid, rid) if self.lang == "zh" else rid
+                scr.addnstr(row, 3, "◌ " + lbl, side - 4, curses.color_pair(C_DIM))
+                row += 1
             row += 1
         if row < h - 3:
             need = len(team.pending_requests())
@@ -746,13 +839,28 @@ class Room:
         scr.hline(h - 3, 0, curses.ACS_HLINE, w)
         prompt = "you> "
         scr.addnstr(h - 2, 1, prompt, 5, curses.color_pair(C_PI) | curses.A_BOLD)
-        shown = self.input[-(w - len(prompt) - 3):]
-        scr.addnstr(h - 2, 1 + len(prompt), shown, w - len(prompt) - 2)
+        room = max(1, w - len(prompt) - 3)
+        txt, cur = self._input, min(self.cur, len(self._input))
+        if cur < self._hscroll:
+            self._hscroll = cur
+        while self._hscroll < cur and cols(txt[self._hscroll:cur]) > room - 1:
+            self._hscroll += 1
+        shown, used = "", 0
+        for c in txt[self._hscroll:]:
+            if used + cols(c) > room:
+                break
+            shown += c
+            used += cols(c)
+        self._put(h - 2, 1 + len(prompt), shown)
+        cur_x = 1 + len(prompt) + cols(txt[self._hscroll:cur])
         hint = self.S["hint"].format("ON" if self.watch_traffic else "off")
         scr.attron(curses.color_pair(C_DIM))
         scr.addnstr(h - 1, 0, hint[:w - 1], w - 1)
         scr.attroff(curses.color_pair(C_DIM))
-        scr.move(h - 2, min(w - 2, 1 + len(prompt) + len(shown)))
+        try:
+            scr.move(h - 2, min(w - 2, cur_x))
+        except curses.error:
+            pass
         scr.refresh()
 
     # ---------- main loop ----------
@@ -793,7 +901,7 @@ class Room:
             except curses.error:
                 continue
             if isinstance(ch, str) and ch.isprintable():
-                self.input += ch
+                self._insert(ch)
                 self.hist_i = None
             elif ch in ("\n", "\r", curses.KEY_ENTER, 10, 13):
                 line = self.input
@@ -804,7 +912,43 @@ class Room:
                 if not self.handle(line):
                     return
             elif ch in (curses.KEY_BACKSPACE, "\x7f", "\b", 127, 8):
-                self.input = self.input[:-1]
+                if self.cur > 0:
+                    self._input = self._input[:self.cur - 1] + self._input[self.cur:]
+                    self.cur -= 1
+            elif ch in (curses.KEY_DC, "\x04"):          # Delete / Ctrl-D
+                self._input = self._input[:self.cur] + self._input[self.cur + 1:]
+            elif ch == curses.KEY_LEFT or ch == "\x02":  # ← / Ctrl-B
+                self.cur = max(0, self.cur - 1)
+            elif ch == curses.KEY_RIGHT or ch == "\x06":  # → / Ctrl-F
+                self.cur = min(len(self._input), self.cur + 1)
+            elif ch in (curses.KEY_HOME, "\x01"):        # Home / Ctrl-A
+                self.cur = 0
+            elif ch in (curses.KEY_END, "\x05"):         # End / Ctrl-E
+                self.cur = len(self._input)
+            elif _kname(ch) in (b"kLFT3", b"kLFT5"):     # Alt-← / Ctrl-←
+                self.cur = self._word_left()
+            elif _kname(ch) in (b"kRIT3", b"kRIT5"):     # Alt-→ / Ctrl-→
+                self.cur = self._word_right()
+            elif ch == "\x17":                           # Ctrl-W: delete word
+                i = self._word_left()
+                self._input = self._input[:i] + self._input[self.cur:]
+                self.cur = i
+            elif ch == "\x15":                           # Ctrl-U: delete to start
+                self._input = self._input[self.cur:]
+                self.cur = 0
+            elif ch == "\x0b":                           # Ctrl-K: delete to end
+                self._input = self._input[:self.cur]
+            elif ch == "\x1b":                           # Esc / Alt-<key>
+                self.scr.timeout(30)
+                try:
+                    nxt = self.scr.get_wch()
+                except curses.error:
+                    nxt = None
+                self.scr.timeout(150)
+                if nxt == "b":
+                    self.cur = self._word_left()
+                elif nxt == "f":
+                    self.cur = self._word_right()
             elif ch == "\t":
                 self.complete()
             elif ch == curses.KEY_UP:
@@ -830,6 +974,16 @@ class Room:
                 pass  # next draw() picks up the new size
 
 
+def _kname(ch):
+    """terminfo name of a special key (e.g. b'kLFT5' for Ctrl-←), or b''."""
+    if not isinstance(ch, int):
+        return b""
+    try:
+        return curses.keyname(ch)
+    except (ValueError, curses.error):
+        return b""
+
+
 def _main(stdscr, cfg):
     curses.start_color()
     curses.use_default_colors()
@@ -837,10 +991,11 @@ def _main(stdscr, cfg):
              (C_OK, curses.COLOR_GREEN, -1),
              (C_WORK, curses.COLOR_GREEN, -1),
              (C_BLOCK, curses.COLOR_YELLOW, -1),
-             (C_DIM, curses.COLOR_BLUE, -1),
+             (C_DIM, -1, -1),          # plain text — only the manager gets colour
              (C_PI, curses.COLOR_MAGENTA, -1),
              (C_TRAFFIC, curses.COLOR_CYAN, -1),
-             (C_REPLY, curses.COLOR_WHITE, -1)]
+             (C_REPLY, curses.COLOR_WHITE, -1),
+             (C_MGR, curses.COLOR_BLACK, curses.COLOR_CYAN)]   # the manager's highlight
     for pid, fg, bg in pairs:
         try:
             curses.init_pair(pid, fg, bg)
@@ -849,8 +1004,21 @@ def _main(stdscr, cfg):
     Room(stdscr, cfg).run()
 
 
+SWITCH_TO = None
+
+
 def room(cfg):
     """Entry point. Returns 0, or raises for the caller to fall back."""
     curses.wrapper(_main, cfg)
     print(S.get(lang_of(config.load() or cfg), S["en"])["left"])
+    if SWITCH_TO:                           # `use <profile>` in the room
+        import os
+        import sys
+        from . import profiles
+        profiles.use(SWITCH_TO)
+        print("→ switching to profile '{}'".format(SWITCH_TO))
+        env = dict(os.environ, MYTEAM_PROFILE=SWITCH_TO)
+        env.pop("MYTEAM_STATE", None)
+        me = str(config.root() / "bin" / "myteam")
+        os.execve(sys.executable, [sys.executable, me], env)
     return 0

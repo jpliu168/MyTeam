@@ -47,8 +47,16 @@ class Hub:
         if d.exists():
             for f in d.glob("*.log.jsonl"):
                 self._offsets[f] = f.stat().st_size
-        self.add("sys", "Welcome to the {} control room. Type a member's name to "
-                 "talk (sam: …), @all to broadcast, or `help`.".format(cfg["group"]))
+        from . import team
+        mg = team.manager(cfg)
+        if mg:
+            self.add("sys", "Welcome to the {} control room. Just type — it goes to your "
+                     "manager, {}. `inbox` = what needs you · `help` = all commands.".format(
+                         cfg["group"], config.display(mg)))
+        else:
+            ex = config.display(cfg["members"][0]) if cfg["members"] else "name"
+            self.add("sys", "Welcome to the {} control room. Type a member's name to "
+                     "talk ({}: …), @all to broadcast, or `help`.".format(cfg["group"], ex))
 
     # feed ---------------------------------------------------------------
     def add(self, kind, text, who=None):
@@ -119,7 +127,7 @@ class Hub:
             st = bus.current_status(name)
             if st == "idle":
                 del self.awaiting[name]
-                body = "\n".join(status.clean_reply(sessions.tail(name, 80), keep=30))
+                body = "\n".join(sessions.reply_of(name, since=sent))
                 self.add("reply", body, who=short(name))
             elif st == "gone":
                 del self.awaiting[name]
@@ -127,6 +135,7 @@ class Hub:
 
     # state for the page -------------------------------------------------
     def state(self):
+        from . import team
         by = {r["m"]["name"]: r for r in self.briefs}
         members = []
         for m in self.cfg["members"]:
@@ -140,8 +149,16 @@ class Hub:
                 "src": r.get("src", ""),
                 "ago": brief.ago(r.get("ts", 0)), "tasks": r.get("tasks", 0),
                 "queued": len(bus.pending(sessions.sname(m["name"]))),
+                "manager": team.is_manager(self.cfg, m),
             })
-        return {"group": self.cfg["group"],
+        hired = {m["role"] for m in self.cfg["members"]}
+        catalog = [{"id": t["id"], "zh": roles.zh(t["id"]), "title": t["title"],
+                    "hired": t["id"] in hired}
+                   for t in roles.for_pack(packs.of(self.cfg)["id"])
+                   if t["id"] not in team.MANAGER_ROLES]
+        mg = team.manager(self.cfg)
+        return {"group": self.cfg["group"], "catalog": catalog,
+                "manager": config.display(mg) if mg else "",
                 "lang": self.cfg.get("prefs", {}).get("lang", "en"),
                 "members": members, "tasks": board.listing(),
                 "tmux": sessions.tmux_ok(), "time": time.strftime("%H:%M:%S")}

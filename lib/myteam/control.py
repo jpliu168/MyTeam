@@ -142,7 +142,8 @@ def room(cfg):
               "inbox = what needs you · staff = who's on the team")
     else:
         print("members: " + ", ".join(m["name"] for m in cfg["members"]))
-        print('talk: "sam: <message>" or "@sam <message>" · everyone: "@all <message>"')
+        ex = config.display(cfg["members"][0]) if cfg["members"] else "name"
+        print('talk: "{0}: <message>" or "@{0} <message>" · everyone: "@all <message>"'.format(ex))
         print("tip: `myteam manager <member>` lets you talk to one manager instead")
     print('assign <m> <task> · watch on|off (agent↔agent traffic, now ON) · open <m>')
     print("roster · ls · standup · tasks · quit (members keep working)")
@@ -253,5 +254,5 @@ def room(cfg):
         if mg:                                   # everything else goes to the manager
             _send(cfg, watcher, mg, raw)
             continue
-        print('  not understood — "sam: <message>", "@all <message>", assign, watch on|off,')
+        print('  not understood — "<member>: <message>", "@all <message>", assign, watch on|off,')
         print("  open <m>, roster, ls, standup, tasks, done <id>, quit")

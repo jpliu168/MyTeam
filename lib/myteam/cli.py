@@ -22,7 +22,7 @@ myteam — one manager runs your team of specialist agents; you talk to the mana
   myteam hire                add a specialist (or `myteam add <role> ["focus"]`)
   myteam manager <member>    make <member> the manager
   myteam edit <m> | retire <m>
-  myteam prefs [key value]   max_active · autonomy (ask|catalog|full) · other_clis · auto_edits
+  myteam prefs [key value]   max_active · autonomy (ask|catalog|full) · other_clis · auto_edits · approvals (edits|auto|full)
 
  used by the manager (you can too)
   myteam add <role> ["focus"] [--cli codex] [--nick Lily]
@@ -35,6 +35,17 @@ myteam — one manager runs your team of specialist agents; you talk to the mana
 
  used by specialists
   myteam report "done #12: ... in deliverables/..."    myteam now "what I'm doing"
+
+ profiles  (2–3 separate teams, e.g. research-pi and research-admin)
+  myteam list                every profile, its preset, members, what's running (* = active)
+  myteam use <name>          switch to a profile — a new name creates it and runs setup
+                            e.g. myteam use research-admin · myteam use research-pi · myteam use default
+  myteam -p <name> <command> one command against another profile (myteam -p research-pi inbox)
+
+ data
+  myteam db                  the team's searchable tables (experts, contacts, vendors ...)
+  myteam db search <table> "words" · add <table> --from rows.csv · export <table>
+                            (`myteam db help` for everything)
 
  plumbing
   myteam start|attach <m> · office · ls · roster · log [m] · msg|ask <m> "text"
@@ -328,6 +339,80 @@ def cmd_retire(cfg, token, purge=False):
     return 0
 
 
+def cmd_list():
+    from . import packs, profiles
+    live = []
+    if sessions.tmux_ok():
+        import subprocess
+        r = subprocess.run(["tmux", "ls", "-F", "#{session_name}"], capture_output=True, text=True)
+        live = r.stdout.splitlines() if r.returncode == 0 else []
+    rows = profiles.all_profiles()
+    print("MyTeam profiles   (switch: myteam use <name> · one-off: myteam -p <name> <command>)")
+    for name, st, cfg in rows:
+        mark = "*" if name == config.PROFILE else " "
+        if cfg is None:
+            print(" {} {:<16} (not set up yet — `myteam use {}`)".format(mark, name, name))
+            continue
+        pre = profiles.prefix(name)
+        run = [s for s in live if s.startswith(pre) and s not in (pre + "daemon", pre + "office")]
+        pk = packs.get(cfg.get("pack") or packs.DEFAULT)
+        print(" {} {:<16} {:<26} {:<15} {:>2} members  {:<10} {}".format(
+            mark, name, (cfg.get("group") or "")[:26], pk["id"], len(cfg.get("members") or []),
+            "{} running".format(len(run)) if run else "off", profiles.short_path(st)))
+        mg = cfg.get("manager")
+        for m in sorted(cfg.get("members") or [], key=lambda x: x["name"] != mg):
+            on = "●" if (pre + m["name"]) in live else "○"
+            who = "manager    " if m["name"] == mg else "specialist "
+            label = m.get("display") or m["name"]
+            focus = (m.get("focus") or "")
+            print("       {} {}{:<22} {:<22} {}".format(
+                on, who, label[:22], m.get("role", "")[:22],
+                (focus[:40] + "…") if len(focus) > 41 else focus))
+        if not cfg.get("members"):
+            print("       (no members yet)")
+        from . import team
+        hired = {m["role"] for m in cfg.get("members") or []}
+        avail = [t["id"] for t in roles.for_pack(pk["id"])
+                 if t["id"] not in team.MANAGER_ROLES and t["id"] not in hired]
+        if avail:
+            mgm = next((m for m in cfg.get("members") or [] if m["name"] == mg), None)
+            print("       ◌ {} can bring in: {}".format(
+                (mgm.get("display") or mgm["name"]) if mgm else "can add", ", ".join(avail)))
+    print("\n ● running  ○ asleep  ◌ available · specialists are named by role; the manager adds them as jobs need")
+    return 0
+
+
+def cmd_use(args):
+    import os
+    from . import profiles
+    if not args:
+        return cmd_list()
+    pos, fl = _flags(args, ("preset",))
+    name, state, is_new = profiles.use(" ".join(pos))
+    if not is_new:
+        try:
+            import json
+            group = json.loads((state / "config.json").read_text()).get("group", name)
+        except (OSError, ValueError):
+            group = name
+        print("✓ now using profile '{}' — {} ({})".format(name, group, profiles.short_path(state)))
+        print("  `myteam` opens its control room · `myteam up` starts its manager")
+        if name != config.PROFILE and sessions.list_sessions():
+            print("  (the '{}' team keeps running in the background)".format(config.PROFILE))
+        return 0
+    print("✓ new profile '{}' → {}".format(name, profiles.short_path(state)))
+    hint = fl.get("preset") or profiles.preset_hint(name)
+    if not sys.stdin.isatty():
+        print("  run `myteam` to set it up")
+        return 0
+    env = dict(os.environ, MYTEAM_PROFILE=name)
+    env.pop("MYTEAM_STATE", None)
+    if hint:
+        env["MYTEAM_PRESET_HINT"] = hint
+    me = str(config.root() / "bin" / "myteam")
+    os.execve(sys.executable, [sys.executable, me], env)   # set it up in a fresh process
+
+
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     if not argv:
@@ -355,6 +440,13 @@ def main(argv=None):
     if cmd in ("-h", "--help", "help"):
         print(HELP)
         return 0
+    if cmd in ("list", "profiles"):
+        return cmd_list()
+    if cmd == "use":
+        return cmd_use(args)
+    if cmd == "db":
+        from . import db
+        return db.main(args)
     if cmd in TEAM_CMDS:
         return team_cmd(cmd, args)
     cfg = _need_cfg()
@@ -397,7 +489,8 @@ def main(argv=None):
             if name in live:
                 print("  = {} already running".format(m["name"]))
             else:
-                print("  ✓ " + team.wake(cfg, m))
+                r = team.wake(cfg, m)
+                print(("  " if r.startswith("✗") else "  ✓ ") + r)
         me = config.root() / "bin" / "myteam"
         if sessions.run_daemon_session('"{}" daemon run'.format(me)):
             print("  ✓ daemon started")
@@ -521,7 +614,7 @@ def main(argv=None):
         if sub == "start":
             me = config.root() / "bin" / "myteam"
             started = sessions.run_daemon_session('"{}" daemon run'.format(me))
-            print("daemon started (tmux session myteam-daemon)" if started
+            print("daemon started (tmux session {})".format(sessions.DAEMON) if started
                   else "daemon already running")
             return 0
         live = sessions.DAEMON in sessions.list_sessions(include_daemon=True)

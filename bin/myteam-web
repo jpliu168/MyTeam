@@ -5,6 +5,10 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "lib"))
 
+from myteam import profiles  # noqa: E402
+
+sys.argv[1:] = profiles.apply_argv(sys.argv[1:])   # -p/--profile NAME
+
 from myteam.web import main  # noqa: E402
 
 if __name__ == "__main__":

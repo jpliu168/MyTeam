@@ -133,10 +133,16 @@ def make_manager(cfg):
 
 
 def first_run():
+    import os
     print(BANNER)
+    if config.PROFILE != "default":
+        print("Setting up profile '{}' — its own team in {}\n".format(config.PROFILE, config.STATE))
+    ids = [p["id"] for p in packs.PACKS]
+    hint = os.environ.get("MYTEAM_PRESET_HINT")
     j = choose("What kind of team is this? (sets the roles and skills on offer; "
                "you can change it later in setup)",
-               ["{} — {}".format(p["en"], p["blurb"]) for p in packs.PACKS])
+               ["{} — {}".format(p["en"], p["blurb"]) for p in packs.PACKS],
+               default=ids.index(hint) + 1 if hint in ids else 1)
     pack = packs.PACKS[j]
     group = ask("What's it called? (e.g. {})".format(pack["example"]), "My Team")
     cfg = dict(config.DEFAULTS)

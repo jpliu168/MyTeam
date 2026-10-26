@@ -115,7 +115,7 @@ def ask(to, text, sender=None, timeout=900):
     time.sleep(6)
     outcome = wait_idle(to, timeout=timeout)
     if outcome == "idle":
-        reply = "\n".join(sessions.tail(to, 60))
+        reply = "\n".join(sessions.reply_of(to, keep=200)) or "\n".join(sessions.tail(to, 60))
         log(sender, to, reply, kind="reply")
         return reply, "idle"
     return None, outcome

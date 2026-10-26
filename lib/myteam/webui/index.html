@@ -37,9 +37,20 @@ aside.members{display:flex;flex-direction:column;overflow:hidden}
 .m{display:grid;grid-template-columns:14px 1fr auto;gap:2px 8px;padding:8px;border-radius:9px;cursor:pointer}
 .m:hover{background:var(--chip)}
 .m .dot{grid-row:1/3;margin-top:5px}
-.m .nm{font-weight:600}
+.m .nm{font-weight:400;color:var(--muted)}
+.m.mgr{background:color-mix(in srgb,var(--accent) 13%,transparent);box-shadow:inset 3px 0 0 var(--accent)}
+.m.mgr:hover{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.m.mgr .nm{font-weight:800;color:var(--accent);font-size:1.08em}
+.m.mgr .rl{color:var(--accent);font-weight:600}
 .m .rl{grid-column:2/4;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m .st{font-size:11.5px;color:var(--muted)}
+.m.spec{margin-left:14px}
+.mhdr{margin:12px 8px 4px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mhdr .n{font-weight:400;text-transform:none;letter-spacing:0}
+.av{display:grid;grid-template-columns:14px 1fr;gap:0 8px;margin-left:14px;padding:5px 8px;border-radius:9px;cursor:pointer;color:var(--muted);font-size:13px}
+.av:hover{background:var(--chip);color:var(--fg,inherit)}
+.av .ring{width:8px;height:8px;margin-top:6px;border-radius:50%;border:1.5px dashed var(--muted)}
+.av .t{grid-column:2;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--off);display:inline-block}
 .dot.working{background:var(--work);box-shadow:0 0 0 3px color-mix(in srgb,var(--work) 25%,transparent);animation:pulse 1.6s infinite}
 .dot.blocked{background:var(--block)}
@@ -53,9 +64,11 @@ main{display:flex;flex-direction:column;gap:14px;min-height:0}
 .brief{padding-bottom:6px}
 .brow{display:grid;grid-template-columns:14px 92px 150px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 14px;cursor:pointer}
 .brow:hover{background:var(--chip)}
-.brow .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .nm{font-weight:400;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brow .rl{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brow .dg{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow.mgr{background:color-mix(in srgb,var(--accent) 13%,transparent);box-shadow:inset 3px 0 0 var(--accent)}
+.brow.mgr .nm,.brow.mgr .rl{font-weight:800;color:var(--accent)}
 .brow .dg.need{color:var(--block);font-weight:600}
 .brow .ag{color:var(--muted);font-size:12px;white-space:nowrap}
 .offline{padding:4px 14px 8px;color:var(--muted);font-size:12.5px}
@@ -70,6 +83,12 @@ main{display:flex;flex-direction:column;gap:14px;min-height:0}
 .reply{margin:8px 0;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:8px 12px;background:color-mix(in srgb,var(--chip) 55%,transparent)}
 .reply .who{font-weight:650;font-size:12.5px;margin-bottom:4px;display:flex;justify-content:space-between}
 .reply .who a{color:var(--accent);cursor:pointer;font-weight:500}
+.reply .who .acts{display:flex;gap:12px}
+.ln{display:block;position:relative;border-radius:4px}
+.ln.pick{cursor:pointer}
+.ln.pick:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.ln.pick:hover::after{content:"↓ to chat";position:absolute;right:4px;top:0;font:11px system-ui,sans-serif;color:var(--accent)}
+#selbtn{position:fixed;display:none;z-index:50;font-size:12px;padding:4px 10px;border-radius:14px;border:1px solid var(--accent);background:var(--panel);color:var(--accent);box-shadow:var(--shadow);cursor:pointer}
 .reply pre{margin:0;white-space:pre-wrap;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
 .ts{color:var(--off);font-size:11px;margin-right:6px;font-variant-numeric:tabular-nums}
 .composer{border-top:1px solid var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
@@ -79,6 +98,11 @@ main{display:flex;flex-direction:column;gap:14px;min-height:0}
 textarea{flex:1;resize:none;font:inherit;border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--bg);color:var(--ink);min-height:42px;max-height:160px}
 textarea:focus,input:focus{outline:2px solid color-mix(in srgb,var(--accent) 45%,transparent);border-color:var(--accent)}
 .hint{font-size:11.5px;color:var(--muted)}
+.mic{width:44px;min-width:44px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--muted);cursor:pointer;padding:0}
+.mic:hover{color:var(--accent);border-color:var(--accent)}
+.mic.on{background:#d93025;border-color:#d93025;color:#fff;animation:micpulse 1.2s ease-in-out infinite}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(217,48,37,.45)}50%{box-shadow:0 0 0 7px rgba(217,48,37,0)}}
+.hint .live{color:#d93025;font-weight:600}
 aside.side{display:flex;flex-direction:column;overflow:hidden}
 .tabs{display:flex;gap:4px;padding:10px 10px 0}
 .tab{border:none;background:transparent;padding:6px 10px;border-radius:7px;color:var(--muted);font-weight:600}
@@ -165,7 +189,10 @@ input.search{width:100%;padding:7px 10px;border:1px solid var(--line);border-rad
       <div class="composer">
         <div class="chips" id="chips"></div>
         <div class="inrow">
-          <textarea id="in" rows="1" placeholder="sam: draft the newsletter · @all … · assign bill … · help"></textarea>
+          <textarea id="in" rows="1" placeholder="type a message · help"></textarea>
+          <button class="mic" id="micbtn" type="button" hidden title="Voice input" aria-label="Voice input">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/></svg>
+          </button>
           <button class="primary" id="sendbtn" data-i="send">Send</button>
         </div>
         <div class="hint" data-i="hint">Enter to send · Shift+Enter new line · Tab completes names · ↑ previous</div>
@@ -227,12 +254,20 @@ input.search{width:100%;padding:7px 10px;border:1px solid var(--line);border-rad
 <script>
 const $ = s => document.querySelector(s);
 const T = {
-  en:{room:"control room",startall:"Start everyone",members:"Members",briefing:"Briefing — what the team is doing",
+  en:{useall:"↓ to chat",usetip:"copy this whole reply into the message box",linetip:"click to put this line in the message box",selbtn:"↓ to chat box",room:"control room",startall:"Start everyone",members:"Members",briefing:"Briefing — what the team is doing",
       send:"Send",hint:"Enter to send · Shift+Enter new line · Tab completes names · ↑ previous",tasks:"Tasks",files:"Files",
       start:"Start",stop:"Stop",sendenter:"Send + Enter",download:"download",
       termnote:"You are typing straight into this member's terminal, as if you were sitting at it — click the dark area and type (arrows, Enter, Esc work), or use the buttons. Messages for the member are better sent from the main box.",
       kbdoff:"click the terminal to type into it",kbdon:"⌨ keyboard → terminal (Esc twice or click outside to stop)",answer:"Answer:",
-      queued:"queued msgs",open:"open tasks",notrun:"not running",none:"No one is running yet — press “Start everyone”.",
+      queued:"queued msgs",open:"open tasks",
+      mic_live:"listening… speak, then click the mic again (or press Send)",mic_start:"Voice input",mic_stop:"Stop listening",
+      mic_denied:"Microphone blocked — allow it for this page in the browser (Safari: Settings for 127.0.0.1 → Microphone → Allow).",
+      mic_nospeech:"Didn't hear anything — click the mic and try again.",mic_err:"Voice input stopped",
+      ph_mgr:"just type — it goes to {mgr} · @{sp} … talks to a specialist · help",
+      ph_none:"{m}: your message · @all … · help",
+      team_mgr:"Manager",team_spec:"Specialists",team_none:"none yet — the manager adds them as jobs need",
+      team_avail:"{mgr} can bring in",team_avail0:"Available roles",team_click:"click to ask for one",
+      team_ask:"bring in a {role} to ",notrun:"not running",none:"No one is running yet — press “Start everyone”.",
       notasks:"No open tasks. Assign one: assign <member> <task>",nofiles:"Nothing in deliverables/ or handbook/ yet.",
       done:"done",needs:"needs you",working:"working",blocked:"needs you",idle:"idle",off:"off",gone:"exited",
       lang:"中文",setup:"⚙ Setup",setuptitle:"Team setup",s_team:"Team",s_name:"Team name",s_lang:"Language",
@@ -243,12 +278,20 @@ const T = {
       s_retireq:"Retire {m}? Their session stops and their workspace is archived to alumni/ (nothing is deleted).",
       s_rename:"Rename",s_pack:"Field preset",s_packnote:"Sets the roles offered first when hiring (★), the shared skills every member gets, how agents address you, and the profile form. Existing members keep their roles.",s_profile:"Company profile",s_psave:"Save profile",
       s_pnote:"Every member reads this as a skill, and it's saved in handbook/. Running members pick it up on their next start.",clickans:"click to answer",stopq:"Stop {m}? Their current conversation ends (files are kept).",tasksN:"task",msgs:"msg"},
-  zh:{room:"控制室",startall:"全部启动",members:"成员",briefing:"简报 — 团队在做什么",send:"发送",
+  zh:{useall:"↓ 放入输入框",usetip:"把整条回复复制到输入框",linetip:"点击把这一行放入输入框",selbtn:"↓ 放入输入框",room:"控制室",startall:"全部启动",members:"成员",briefing:"简报 — 团队在做什么",send:"发送",
       hint:"回车发送 · Shift+回车换行 · Tab 补全名字 · ↑ 上一条",tasks:"任务",files:"文件",start:"启动",stop:"停止",
       sendenter:"发送并回车",download:"下载",
       termnote:"你正直接在该成员的终端里打字，就像坐在它面前一样 — 点击黑色区域后直接打字（方向键、回车、Esc 都可用），或用下面的按钮。给成员的消息最好从主输入框发送。",
       kbdoff:"点击终端即可直接输入",kbdon:"⌨ 键盘 → 终端（连按两次 Esc 或点外面退出）",answer:"回答：",
-      queued:"待送消息",open:"未完任务",notrun:"未运行",none:"还没有成员在运行 — 点“全部启动”。",
+      queued:"待送消息",open:"未完任务",
+      mic_live:"正在听… 说完再点一次麦克风（或直接发送）",mic_start:"语音输入",mic_stop:"停止",
+      mic_denied:"麦克风被阻止 — 请在浏览器中允许此页面使用麦克风（Safari：127.0.0.1 的网站设置 → 麦克风 → 允许）。",
+      mic_nospeech:"没有听到声音 — 再点一次麦克风重试。",mic_err:"语音输入已停止",
+      ph_mgr:"直接输入 — 发给 {mgr} · @{sp} … 直接找专家 · help",
+      ph_none:"{m}: 你的消息 · @all … · help",
+      team_mgr:"经理",team_spec:"专家",team_none:"暂无 — 经理会按需添加",
+      team_avail:"{mgr} 可调用",team_avail0:"可用角色",team_click:"点击请经理安排",
+      team_ask:"请安排一位 {role}，负责 ",notrun:"未运行",none:"还没有成员在运行 — 点“全部启动”。",
       notasks:"没有未完任务。分配：assign <成员> <任务>",nofiles:"deliverables/ 和 handbook/ 里还没有文件。",
       done:"完成",needs:"等你处理",working:"工作中",blocked:"等你处理",idle:"空闲",off:"未运行",gone:"已退出",
       lang:"English",setup:"⚙ 设置",setuptitle:"团队设置",s_team:"团队",s_name:"团队名称",s_lang:"语言",
@@ -262,7 +305,10 @@ const T = {
 };
 const ROLE_ZH={"operations-manager":"运营总管","executive-assistant":"行政助理","bookkeeper":"记账","tax-prep":"税务准备",
  "customer-support":"客服支持","sales":"销售跟进","marketing":"市场推广","copywriter":"文案","market-researcher":"市场调研",
- "contracts-compliance":"合同合规","hr":"人事","data-analyst":"数据分析","reviewer":"审核","generalist":"全能助理"};
+ "contracts-compliance":"合同合规","hr":"人事","data-analyst":"数据分析","reviewer":"审核","generalist":"全能助理",
+ "chief-of-staff":"总管","funding-scout":"经费机会侦察","expert-curator":"校内专家库","proposal-coordinator":"申请协调",
+ "development-writer":"申请写作编辑","communications":"新闻与社媒","events-training":"活动与培训",
+ "research-analyst":"科研数据分析","compliance-awards":"合规与项目跟踪"};
 let S = {members:[],tasks:[],lang:"en"}, L = T.en, last = 0, termM = null, hist = [], hi = -1, files = [];
 
 async function api(path, body){
@@ -281,13 +327,31 @@ function applyLang(){
 }
 
 function renderMembers(){
-  $("#mlist").innerHTML = S.members.map(m => `
-    <div class="m" data-m="${esc(m.name)}" title="${esc(m.role_title)}">
+  const ms = [...S.members].sort((a,b)=>(b.manager?1:0)-(a.manager?1:0));   // manager first
+  const hasMgr = ms.some(m => m.manager);
+  const card = m => `
+    <div class="m${m.manager?" mgr":""}${hasMgr && !m.manager?" spec":""}" data-m="${esc(m.name)}" title="${esc(m.role_title)}">
       <span class="dot ${m.status}"></span>
-      <span class="nm">${esc(m.display)}</span>
-      <span class="st">${m.queued ? `<span class="badge warn">${m.queued} ${L.msgs}</span> ` : ""}${esc(L[m.status]||m.status)}</span>
-      <span class="rl">${esc(role(m.role, m.role_zh))}</span>
-    </div>`).join("");
+      <span class="nm">${m.manager ? "★ " : ""}${esc(m.display)}</span>
+      <span class="st">${m.queued ? `<span class="badge warn">${m.queued} ${L.msgs}</span>` : ""}</span>
+      <span class="rl">${esc(role(m.role, m.role_zh))} (${esc(L[m.status]||m.status)})</span>
+    </div>`;
+  const mgr = ms.filter(m => m.manager), specs = ms.filter(m => !m.manager);
+  const avail = (S.catalog || []).filter(r => !r.hired);
+  let h = (hasMgr ? `<div class="mhdr">${L.team_mgr}</div>` : "") + mgr.map(card).join("");
+  if (hasMgr) h += `<div class="mhdr">${L.team_spec} <span class="n">(${specs.length})</span></div>`;
+  h += specs.length ? specs.map(card).join("") : (hasMgr ? `<div class="av" style="cursor:default"><span></span><span>${L.team_none}</span></div>` : "");
+  if (avail.length) {
+    h += `<div class="mhdr">${hasMgr ? L.team_avail.replace("{mgr}", esc(S.manager)) : L.team_avail0} <span class="n">(${avail.length})</span></div>`;
+    h += avail.map(r => `<div class="av" data-role="${esc(r.id)}" title="${esc(r.title)} — ${esc(L.team_click)}">
+      <span class="ring"></span><span>${esc(role(r.id, r.zh))}</span><span class="t">${esc(r.title.replace(/^[^(]*\(|\)$/g, "") || r.title)}</span></div>`).join("");
+  }
+  $("#mlist").innerHTML = h;
+  // composer hint uses the real names (manager first, then a specialist)
+  const sp = specs[0] ? specs[0].display : (avail[0] ? avail[0].id : "");
+  const ph = hasMgr ? L.ph_mgr.replace("{mgr}", mgr[0].display).replace("{sp}", sp || "…")
+                    : L.ph_none.replace("{m}", ms[0] ? ms[0].display : "name");
+  if ($("#in").placeholder !== ph) $("#in").placeholder = ph;
   const q = S.members.reduce((a,m)=>a+m.queued,0);
   $("#st-q").textContent = `${L.queued}: ${q}`;
   $("#st-t").textContent = `${L.open}: ${S.tasks.length}`;
@@ -295,13 +359,13 @@ function renderMembers(){
 
 function renderBrief(){
   const order = {working:0,blocked:1,idle:2,gone:3,off:4};
-  const rows = [...S.members].sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
+  const rows = [...S.members].sort((a,b)=>(b.manager?1:0)-(a.manager?1:0) || (order[a.status]??9)-(order[b.status]??9));
   const act = rows.filter(m => m.status !== "off" || m.doing);
   const idle = rows.filter(m => m.status === "off" && !m.doing).map(m=>m.display);
   let h = act.map(m => {
     const need = m.status === "blocked";
     const tail = [m.tasks ? `${m.tasks} ${L.tasksN}` : "", m.ago].filter(Boolean).join(" · ");
-    return `<div class="brow" data-m="${esc(m.name)}">
+    return `<div class="brow${m.manager?" mgr":""}" data-m="${esc(m.name)}">
       <span class="dot ${m.status}"></span><span class="nm">${esc(m.display)}</span>
       <span class="rl">${esc(role(m.role, m.role_zh))}</span>
       <span class="dg ${need?"need":""}" title="${esc(m.doing)}">${esc(m.doing || "—")}${need ? " — " + L.clickans : ""}</span>
@@ -324,6 +388,24 @@ function renderChips(){
   $("#chips").innerHTML = [...base, ...names].map(c => `<button class="chip" data-chip="${esc(c)}">${esc(c.trim())}</button>`).join("");
 }
 
+// lines that look like a recommendation / option (1. …, - …, • …, (a) …, A) …) become clickable
+const PICK = /^\s*(?:\d{1,2}[.)]|[-*•·▸►→✓☐]|\(?[a-zA-Z][.)]|\[[ x]\])\s+\S/;
+function replyLines(text){
+  return text.split("\n").map(l => PICK.test(l)
+    ? `<span class="ln pick" data-line="1" title="${esc(L.linetip)}">${esc(l)}</span>`
+    : `<span class="ln">${esc(l) || " "}</span>`).join("");
+}
+// strip the list marker so "2. Ask Adam to…" lands in the box as "Ask Adam to…"
+function cleanPick(l){ return l.replace(/^\s*(?:\d{1,2}[.)]|[-*•·▸►→✓☐]|\(?[a-zA-Z][.)]|\[[ x]\])\s+/, "").trim(); }
+function toBox(text){
+  text = (text || "").trim(); if (!text) return;
+  const a = box.selectionStart ?? box.value.length, b = box.selectionEnd ?? a;
+  const pre = box.value.slice(0, a), post = box.value.slice(b);
+  const sep = pre && !/\s$/.test(pre) ? " " : "";
+  box.value = pre + sep + text + post;
+  const pos = (pre + sep + text).length;
+  grow(); box.focus(); box.setSelectionRange(pos, pos);
+}
 function addFeed(items){
   const f = $("#feed"), stick = f.scrollHeight - f.scrollTop - f.clientHeight < 60;
   for (const e of items){
@@ -332,7 +414,8 @@ function addFeed(items){
     const d = document.createElement("div");
     if (e.kind === "reply"){
       d.className = "reply";
-      d.innerHTML = `<div class="who"><span>${esc(e.who)}</span><a data-m="${esc(e.who)}">open terminal ›</a></div><pre>${esc(e.text)}</pre>`;
+      d.innerHTML = `<div class="who"><span>${esc(e.who)}</span><span class="acts"><a data-use="1" title="${esc(L.usetip)}">${esc(L.useall)}</a><a data-m="${esc(e.who)}">open terminal ›</a></span></div><pre>${replyLines(e.text)}</pre>`;
+      d._text = e.text;
     } else {
       d.className = "it " + e.kind;
       d.innerHTML = `<span class="ts">${t}</span>${esc(e.text)}`;
@@ -369,7 +452,7 @@ async function send(){
 function grow(){ box.style.height = "auto"; box.style.height = Math.min(160, box.scrollHeight) + "px"; }
 box.addEventListener("input", grow);
 box.addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); }
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); micStop(); send(); }
   else if (e.key === "Tab"){
     e.preventDefault();
     const m = box.value.match(/(@?)([\w-]*)$/); if (!m || !m[2]) return;
@@ -381,7 +464,67 @@ box.addEventListener("keydown", e => {
     e.preventDefault(); hi = hi < 0 ? hist.length-1 : Math.max(0, hi-1); box.value = hist[hi];
   }
 });
-$("#sendbtn").onclick = send;
+$("#sendbtn").onclick = () => { micStop(); send(); };
+
+// voice input — the browser's built-in speech recognition (Safari, Chrome, Edge).
+// Speech becomes text in the box; you review it and press Send (nothing is sent by itself).
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, micOn = false, micBase = "";
+function micHint(on){
+  const h = document.querySelector(".hint[data-i=hint]");
+  if (on) h.innerHTML = `<span class="live">● ${esc(L.mic_live)}</span>`;
+  else h.textContent = L.hint;
+}
+function micStop(){ if (micOn && rec) { micOn = false; try { rec.stop(); } catch(e){} } }
+if (SR) {
+  const mb = $("#micbtn"); mb.hidden = false;
+  mb.onclick = () => {
+    if (micOn) { micStop(); return; }
+    rec = new SR();
+    rec.lang = S.lang === "zh" ? "zh-CN" : "en-US";
+    rec.continuous = true; rec.interimResults = true;
+    micBase = box.value ? box.value.replace(/\s*$/, " ") : "";
+    let finalTxt = "";
+    rec.onresult = e => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalTxt += t; else interim += t;
+      }
+      box.value = micBase + finalTxt + interim; grow();
+    };
+    rec.onerror = e => {
+      const msg = e.error === "not-allowed" || e.error === "service-not-allowed" ? L.mic_denied
+                : e.error === "no-speech" ? L.mic_nospeech : (L.mic_err + " (" + e.error + ")");
+      addFeed([{id: last, kind:"err", text: msg, ts: Date.now()/1000}]);
+    };
+    rec.onend = () => { micOn = false; mb.classList.remove("on"); mb.title = L.mic_start; micHint(false); box.focus(); };
+    try { rec.start(); } catch(e) { return; }
+    micOn = true; mb.classList.add("on"); mb.title = L.mic_stop; micHint(true);
+  };
+}
+$("#feed").addEventListener("click", e => {
+  if (String(window.getSelection())) return;            // they were selecting text
+  const use = e.target.closest("[data-use]");
+  if (use){ toBox(use.closest(".reply")._text); return; }
+  const ln = e.target.closest("[data-line]");
+  if (ln) toBox(cleanPick(ln.textContent));
+});
+const selbtn = document.createElement("button");
+selbtn.id = "selbtn"; document.body.appendChild(selbtn);
+let selText = "";
+document.addEventListener("selectionchange", () => {
+  const sel = window.getSelection(), t = String(sel).trim();
+  if (!t || !sel.rangeCount || !$("#feed").contains(sel.anchorNode)){ selbtn.style.display = "none"; selText = ""; return; }
+  selText = t;
+  const r = sel.getRangeAt(0).getBoundingClientRect();
+  selbtn.textContent = L.selbtn;
+  selbtn.style.left = Math.max(8, Math.min(window.innerWidth - 120, r.right - 90)) + "px";
+  selbtn.style.top = Math.max(8, r.top - 32) + "px";
+  selbtn.style.display = "block";
+});
+selbtn.addEventListener("mousedown", e => e.preventDefault()); // keep the selection
+selbtn.onclick = () => { toBox(selText); window.getSelection().removeAllRanges(); selbtn.style.display = "none"; };
 $("#chips").onclick = e => { const c = e.target.dataset.chip; if (!c) return;
   if (c.endsWith(" ")) { box.value = c; box.focus(); } else { box.value = c; send(); } };
 $("#upbtn").onclick = async () => { await api("/api/up", {}); setTimeout(tick, 800); };
@@ -417,6 +560,12 @@ $("#f-close").onclick = () => $("#ov-file").classList.remove("on");
 
 // member terminal drawer
 document.addEventListener("click", e => {
+  const av = e.target.closest("[data-role]");
+  if (av && !av.closest("#ov-setup")) {
+    const i = $("#in"); i.value = (S.manager ? S.manager.toLowerCase() + ": " : "") +
+      L.team_ask.replace("{role}", av.dataset.role);
+    i.focus(); i.setSelectionRange(i.value.length, i.value.length); return;
+  }
   const el = e.target.closest("[data-m]"); if (!el || el.closest("#ov-term") || el.closest("#ov-setup")) return;
   openTerm(el.dataset.m);
 });

@@ -17,8 +17,12 @@ PREFS = {
     "max_active": 3,         # running specialists at once (manager not counted)
     "autonomy": "catalog",   # ask | catalog | full
     "other_clis": True,      # manager may use Codex / Gemini CLI when installed
-    "auto_edits": True,      # file edits inside allowed folders need no approval
+    "auto_edits": True,      # members start in a no-prompt mode (see `approvals`)
+    "approvals": "auto",     # edits = only file edits auto-approved (old behaviour)
+                             # auto  = Claude Code auto mode: safe actions run, risky ones still ask
+                             # full  = never ask (bypassPermissions) — use with care
 }
+APPROVALS = ("edits", "auto", "full")
 
 
 def pref(cfg, key):
@@ -35,6 +39,8 @@ def set_pref(cfg, key, value):
         value = int(value)
     elif key == "autonomy" and value not in ("ask", "catalog", "full"):
         raise SystemExit("autonomy is one of: ask, catalog, full")
+    elif key == "approvals" and value not in APPROVALS:
+        raise SystemExit("approvals is one of: " + ", ".join(APPROVALS))
     cfg.setdefault("prefs", {})[key] = value
     config.save(cfg)
     return value
@@ -43,11 +49,17 @@ def set_pref(cfg, key, value):
 # ---------------------------------------------------------------- agent CLIs
 CLIS = {
     "claude": {"label": "Claude Code", "bin": "claude",
-               "auto": "--permission-mode acceptEdits",
+               "auto": {"edits": "--permission-mode acceptEdits",
+                        "auto": "--permission-mode auto",
+                        "full": "--permission-mode bypassPermissions"},
                "dirs": lambda ds: "".join(" --add-dir " + shlex.quote(d) for d in ds)},
-    "codex": {"label": "Codex", "bin": "codex", "auto": "--full-auto",
+    "codex": {"label": "Codex", "bin": "codex",
+              "auto": {"edits": "--full-auto", "auto": "--full-auto",
+                       "full": "--dangerously-bypass-approvals-and-sandbox"},
               "dirs": lambda ds: "".join(" --add-dir " + shlex.quote(d) for d in ds)},
-    "gemini": {"label": "Gemini CLI", "bin": "gemini", "auto": "--approval-mode auto_edit",
+    "gemini": {"label": "Gemini CLI", "bin": "gemini",
+               "auto": {"edits": "--approval-mode auto_edit", "auto": "--approval-mode auto_edit",
+                        "full": "--approval-mode yolo"},
                "dirs": lambda ds: (" --include-directories " + shlex.quote(",".join(ds)))
                if ds else ""},
 }
@@ -86,8 +98,13 @@ def build_cmd(cfg, m, cli):
         return m["cmd"]
     a = CLIS[cli]
     base = m["cmd"] if (m.get("agent") == cli and m.get("cmd")) else a["bin"]
-    if pref(cfg, "auto_edits") and a["auto"].split()[0] not in base:
-        base += " " + a["auto"]
+    flag = a["auto"].get(pref(cfg, "approvals"), a["auto"]["edits"])
+    if cli == "claude" and pref(cfg, "auto_edits"):
+        # a saved command may still carry the old mode — the team setting wins
+        base = re.sub(r"\s--permission-mode[ =]\S+", "", base)
+    if pref(cfg, "auto_edits") and flag.split()[0] not in base \
+            and "--dangerously" not in base and "--full-auto" not in base:
+        base += " " + flag
     return base + a["dirs"](dirs)
 
 
@@ -219,8 +236,11 @@ def wake(cfg, m, task=None, cli=None, by=None, wait=25):
             sessions.launch(cfg, m, attach=False, cli=DEFAULT_CLI)
             chosen, outcome = DEFAULT_CLI, _settle(name, wait)
         if outcome == "gone":
-            return "✗ {} exited right after starting — `myteam start {}` to look".format(
-                m["name"], m["name"])
+            time.sleep(0.5)
+            why = sessions.last_exit(m["name"])
+            return "✗ {} exited right after starting{}".format(
+                m["name"], (" — it said:\n" + why) if why else
+                " — `myteam start {}` to look".format(m["name"]))
         if outcome == "login":
             notes.append("{} needs a login — the boss must sign in once".format(m["name"]))
         notes.insert(0, "woke {} on {}".format(m["name"], CLIS.get(chosen, {}).get(
@@ -246,7 +266,7 @@ def _settle(name, wait):
         lines = sessions.tail(name, 40)
         text = "\n".join(lines[-15:])
         if TRUST.search(text) and not answered:
-            sessions.send_keys(name, "Enter")
+            _trust_yes(name)
             answered = True
             time.sleep(2)
             continue
@@ -257,6 +277,22 @@ def _settle(name, wait):
             return "idle"
         time.sleep(1.5)
     return status.classify(sessions.tail(name)) if name in sessions.list_sessions() else "gone"
+
+
+def _trust_yes(name):
+    """Answer the CLI's "do you trust this folder?" menu with YES. Newer Claude
+    Code puts the cursor on "No, exit", so a bare Enter would quit — move the
+    cursor to the yes/trust option first. Falls back to Enter if no menu."""
+    from . import sessions
+    from .web import choose, find_menu
+    menu = find_menu(sessions.tail(name, 60))
+    if menu:
+        opts = [o.lower() for o in menu["options"]]
+        yes = next((i for i, o in enumerate(opts)
+                    if ("yes" in o or "trust" in o) and not o.startswith("no")), None)
+        if yes is not None and choose(name, yes):
+            return
+    sessions.send_keys(name, "Enter")
 
 
 def sleep_member(cfg, m, by=None):
@@ -519,5 +555,6 @@ def staff_text(cfg):
         out.append("  {}{:<24} {}".format("·" if t["id"] in have else " ", t["id"], t["title"]))
     out.append("CLIs usable now: {}  (autonomy: {}, auto-edits: {})".format(
         ", ".join(CLIS[c]["label"] for c in usable_clis(cfg)) or "none found!",
-        pref(cfg, "autonomy"), "on" if pref(cfg, "auto_edits") else "off"))
+        pref(cfg, "autonomy"),
+        pref(cfg, "approvals") if pref(cfg, "auto_edits") else "off"))
     return "\n".join(out)

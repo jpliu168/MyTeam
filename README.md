@@ -34,6 +34,33 @@ myteam staff     # who's on the team, who's running, the role catalog
 myteam prefs     # max_active (3) · autonomy (ask|catalog|full) · other_clis · auto_edits
 ```
 
+
+## Profiles — more than one team
+
+Run 2–3 separate teams side by side, e.g. a lab for your PI work and a
+research office for your admin work:
+
+```bash
+myteam use research-admin     # creates it (setup asks the preset) or switches to it
+myteam use research-pi
+myteam list                   # all profiles, * = active, what's running
+myteam -p research-admin inbox   # one command against another profile
+```
+
+`~/myteam` stays the `default` profile; new ones live in `~/myteam/profiles/<name>/`.
+The **research-admin** preset gives a chief of staff plus a funding scout,
+campus expert-database curator, proposal development coordinator,
+development writer, news & social media manager, events & training,
+research analytics, compliance & award tracking, and a reviewer.
+
+The **academic-admin** preset (dean or department head) gives a chief of
+staff plus faculty affairs (searches, P&T, reviews), curriculum & course
+scheduling, student programs, budget & resources, assessment &
+accreditation, unit analytics, governance & committees, advancement &
+alumni, communications, and a reviewer. Personnel and student records follow
+the `confidential-records` skill. `myteam use dean` or `myteam use dept-head`
+picks this preset automatically.
+
 ## Install & found your team
 
 ```bash
