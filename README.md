@@ -11,11 +11,64 @@ See [DESIGN.md](DESIGN.md) for the why and the rules.
 Requires macOS or Linux, Python 3, tmux, and [Claude Code](https://claude.com/claude-code)
 (Codex and Gemini CLI are optional).
 
+> **Windows users:** MyTeam does **not** run from Command Prompt (cmd) or
+> PowerShell — it needs tmux and a Linux terminal. Install it inside **WSL**
+> (Windows Subsystem for Linux, built into Windows 10/11) using the
+> [Windows steps](#windows-wsl) below. It then works exactly as on a Mac.
+
+### macOS / Linux
+
 ```bash
 git clone https://github.com/jpliu168/MyTeam.git
 cd MyTeam && bash install.sh
 myteam
 ```
+
+On a Mac, install tmux first if you don't have it: `brew install tmux`.
+
+### Windows (WSL)
+
+One-time setup, about 10 minutes.
+
+1. **Install WSL.** Open **PowerShell as Administrator** (Start menu → type
+   "PowerShell" → right-click → *Run as administrator*) and run:
+
+   ```powershell
+   wsl --install
+   ```
+
+   Restart Windows when it finishes. Ubuntu opens and asks you to pick a
+   Linux username and password (it's separate from your Windows login).
+
+2. **Open "Ubuntu"** from the Start menu. Run every command from here on in
+   this Ubuntu window — not in cmd or PowerShell.
+
+3. **Install the tools, Claude Code, and MyTeam:**
+
+   ```bash
+   sudo apt update && sudo apt install -y git tmux python3
+   curl -fsSL https://claude.ai/install.sh | bash
+   claude            # sign in once, then type /exit
+   git clone https://github.com/jpliu168/MyTeam.git
+   cd MyTeam && bash install.sh
+   ```
+
+   If the installer says `~/.local/bin` is not on your PATH, run
+   `echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc`.
+
+4. **Start your team:** `myteam`
+
+Good to know on Windows:
+
+- **Always start MyTeam from the Ubuntu app.** Typing `myteam` in cmd or
+  PowerShell won't work.
+- **Web control room:** `myteam-web` works and opens in your normal Windows
+  browser. If no browser appears, run `myteam-web url` and paste the link.
+- **Your team's files** live in Linux at `~/myteam`. In File Explorer, open
+  `\\wsl$\Ubuntu\home\<your-linux-username>\myteam`.
+- **Windows folders** are visible to agents under `/mnt/c/` — e.g.
+  `/mnt/c/Users/<you>/Documents`.
+- **Update later:** `cd ~/MyTeam && git pull`.
 
 First run asks what kind of team it is, then its name, then runs the hiring
 loop. Seven field presets — each brings its own roles, shared skills, profile
