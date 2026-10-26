@@ -2,7 +2,8 @@
 
 **You talk to one manager; the manager runs a team of specialist agents that
 know your organization and get better at its work every week.** For a small
-business, a one-person company, a research lab, a course, or a nonprofit.
+business, a one-person company, a research lab, a university office, a
+course, a nonprofit, or a freelance practice.
 See [DESIGN.md](DESIGN.md) for the why and the rules.
 
 ## How it works (v0.2)
@@ -63,19 +64,25 @@ picks this preset automatically.
 
 ## Install & found your team
 
+Requires macOS or Linux, Python 3, tmux, and [Claude Code](https://claude.com/claude-code)
+(Codex and Gemini CLI are optional).
+
 ```bash
-cd ~/agents/MyTeam && ./install.sh
+git clone https://github.com/jpliu168/MyTeam.git
+cd MyTeam && bash install.sh
 myteam
 ```
 
 First run asks what kind of team it is, then its name, then runs the hiring
-loop. Five field presets — each brings its own roles, shared skills, profile
+loop. Seven field presets — each brings its own roles, shared skills, profile
 form, handbook starter, and how agents address you:
 
 | Preset | You are | Roles on offer |
 |---|---|---|
 | Small business / company | owner | operations manager, executive assistant, bookkeeper, tax prep, customer support, sales, marketing, copywriter, market researcher, contracts & compliance, HR, data analyst, reviewer |
 | University research lab | PI | chief of staff, proposal writer, manuscript writer, lit scout, HPC runner, data analyst, slides maker, reviewer, grants admin, outreach |
+| University research office | director | chief of staff, funding scout, expert-database curator, proposal coordinator, development writer, news & social media, events & training, research analytics, compliance & awards, reviewer |
+| Academic leadership (dean / dept head) | dean/head | chief of staff, faculty affairs, curriculum & scheduling, student programs, budget & resources, assessment & accreditation, unit analytics, governance & committees, advancement & alumni, communications, reviewer |
 | Teaching / a course | instructor | course manager, course designer, lecture & slides maker, assignment & quiz writer, grading assistant, student Q&A, lab & code developer, accessibility checker, LMS admin, reviewer |
 | Nonprofit / community | director | operations manager, program coordinator, grant writer, donor relations, volunteer coordinator, events, communications, board secretary, bookkeeper, reviewer |
 | Freelancer / creator | owner | studio manager, client manager, proposals & invoices, content producer, social & newsletter, portfolio & web, scheduler, bookkeeper & tax, reviewer |
@@ -139,3 +146,9 @@ flagged for the CPA or attorney.
 Separate command (`myteam`), state (`~/myteam/`), tmux sessions
 (`myteam-*`) and env vars (`MYTEAM_*`) — both can run at once. Note that
 `tmux kill-server` stops both; use `myteam kill <m>` to stop one member.
+
+## License
+
+MyTeam is released under the [MIT License](LICENSE) — © 2026 Paul Liu.
+You may use, copy, modify and share it, including commercially, as long as
+the copyright and license notice stay with it. It comes with no warranty.
