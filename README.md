@@ -97,13 +97,13 @@ Everything works like MyLab, with `myteam` in place of `mylab`:
 
 ```bash
 myteam                       # the control room (sidebar, feed, input line)
-myteam up | start sam | open sam
+myteam up | start alex | open alex
 myteam assign tina "organize Q3 receipts into deliverables/books/"
 myteam standup | tasks | done 3
-myteam hire | edit sam | retire sam
+myteam hire | edit alex | retire alex
 ```
 
-In the control room: `sam: <msg>`, `@all <msg>`, `assign`, `tasks`,
+In the control room: `alex: <msg>`, `@all <msg>`, `assign`, `tasks`,
 `standup`, `watch on|off`, `setup`, `help`, `quit`. Your prompt is `you>`.
 
 ## The web control room
@@ -115,7 +115,7 @@ myteam-web stop       # shut it down (the team keeps working)
 ```
 
 Same control room in a browser: members with live status, the briefing,
-the feed with replies, the same input box (`sam: …`, `@all …`, `assign …`),
+the feed with replies, the same input box (`alex: …`, `@all …`, `assign …`),
 a Tasks tab with ✓ done buttons, and a Files tab to read deliverables/ and
 handbook/. Click any member to watch their terminal live and answer their
 prompts (e.g. the first-run trust question) without leaving the browser.
