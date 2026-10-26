@@ -4,3 +4,4 @@ __pycache__/
 _backup-*/
 .venv/
 *.log
+*.docx

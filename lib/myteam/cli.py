@@ -248,7 +248,7 @@ def _rename_member(cfg, m, new_display):
     new_slug = re.sub(r"[^a-z0-9-]+", "-", new_display.lower()).strip("-")
     old = m["name"]
     if not new_slug or new_slug == old:
-        m["display"] = new_display            # display-only (e.g. sam -> Sam)
+        m["display"] = new_display            # display-only (e.g. alex -> Alex)
         return old
     if config.member(cfg, new_slug):
         print("  a member keyed '{}' already exists — pick another name".format(new_slug))

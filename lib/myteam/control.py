@@ -1,11 +1,11 @@
 """The control room — `myteam` with no arguments drops the owner here.
 
 One terminal, chat-style:
-    sam: draft the aims page          talk to a member (also: @sam ...)
+    alex: draft the aims page          talk to a member (also: @alex ...)
     @all stand by for new priorities  broadcast to every member
     assign david "make the deck"      task board + notify
     watch on|off                      stream agent-to-agent bus traffic
-    open sam                          full-screen into sam (ctrl-b d returns)
+    open alex                          full-screen into alex (ctrl-b d returns)
     roster / ls / standup / tasks     the usual views
     quit                              leave (members keep working)
 
@@ -205,7 +205,7 @@ def room(cfg):
             else:
                 print("  no member '{}'".format(rest))
             continue
-        # talk: "@sam text" | "@sam @david text" | "@all text" | "sam: text"
+        # talk: "@alex text" | "@alex @david text" | "@all text" | "alex: text"
         if raw.startswith("@"):
             words = raw.split()
             mentions, rest_words = [], []

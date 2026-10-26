@@ -34,9 +34,9 @@ manager as a request (`myteam request`).
 
 ```bash
 myteam roster                 # who exists; myteam ls = who is running + status
-myteam msg sam "FYI: new pricing is in handbook/pricing.md"
+myteam msg alex "FYI: new pricing is in handbook/pricing.md"
 myteam ask rev "review deliverables/copy/home.md — top 3 problems only"
-myteam wait sam               # block until sam finishes
+myteam wait alex               # block until alex finishes
 ```
 
 `msg` queues politely if the teammate is busy. `ask` waits for them to be

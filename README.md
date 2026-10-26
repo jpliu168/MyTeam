@@ -6,62 +6,6 @@ business, a one-person company, a research lab, a university office, a
 course, a nonprofit, or a freelance practice.
 See [DESIGN.md](DESIGN.md) for the why and the rules.
 
-## How it works (v0.2)
-
-- **You talk only to your manager** (you name them at setup). Just type in
-  `myteam` or `myteam web` — plain messages go to the manager.
-- **Specialists have no names** — a role and a focus (bookkeeper,
-  copywriter-grant-letters, lit-scout). The manager adds them from the role
-  catalog, wakes 1–3 for a job, and puts them to sleep when done. Their
-  folders and notebooks persist, so they remember past jobs.
-- **Specialists report to the manager**, who checks the work and gives you
-  one summary with a short "needs your decision" list.
-- **You keep two things:** access to folders outside ~/myteam, and anything
-  involving money or the outside world. The manager files a request;
-  `myteam inbox` → `approve <id>` / `decline <id>`.
-- **Claude Code is all you need.** If Codex or Gemini CLI is installed, the
-  manager may use it for some jobs (`handbook/routing.md`); if it fails, the
-  job falls back to Claude Code.
-- **The team learns:** your corrections go to `handbook/preferences.md`,
-  each specialist keeps a `NOTEBOOK.md`, repeated jobs become team skills in
-  `~/myteam/skills/`, and every Monday the manager tidies all of it and tells
-  you what the team learned (`myteam learned`).
-
-```bash
-myteam up        # start your manager (+ the daemon)
-myteam           # talk to them
-myteam inbox     # what needs you
-myteam staff     # who's on the team, who's running, the role catalog
-myteam prefs     # max_active (3) · autonomy (ask|catalog|full) · other_clis · auto_edits
-```
-
-
-## Profiles — more than one team
-
-Run 2–3 separate teams side by side, e.g. a lab for your PI work and a
-research office for your admin work:
-
-```bash
-myteam use research-admin     # creates it (setup asks the preset) or switches to it
-myteam use research-pi
-myteam list                   # all profiles, * = active, what's running
-myteam -p research-admin inbox   # one command against another profile
-```
-
-`~/myteam` stays the `default` profile; new ones live in `~/myteam/profiles/<name>/`.
-The **research-admin** preset gives a chief of staff plus a funding scout,
-campus expert-database curator, proposal development coordinator,
-development writer, news & social media manager, events & training,
-research analytics, compliance & award tracking, and a reviewer.
-
-The **academic-admin** preset (dean or department head) gives a chief of
-staff plus faculty affairs (searches, P&T, reviews), curriculum & course
-scheduling, student programs, budget & resources, assessment &
-accreditation, unit analytics, governance & committees, advancement &
-alumni, communications, and a reviewer. Personnel and student records follow
-the `confidential-records` skill. `myteam use dean` or `myteam use dept-head`
-picks this preset automatically.
-
 ## Install & found your team
 
 Requires macOS or Linux, Python 3, tmux, and [Claude Code](https://claude.com/claude-code)
@@ -146,6 +90,32 @@ flagged for the CPA or attorney.
 Separate command (`myteam`), state (`~/myteam/`), tmux sessions
 (`myteam-*`) and env vars (`MYTEAM_*`) — both can run at once. Note that
 `tmux kill-server` stops both; use `myteam kill <m>` to stop one member.
+
+## Profiles — more than one team
+
+Run 2–3 separate teams side by side, e.g. a lab for your PI work and a
+research office for your admin work:
+
+```bash
+myteam use research-admin     # creates it (setup asks the preset) or switches to it
+myteam use research-pi
+myteam list                   # all profiles, * = active, what's running
+myteam -p research-admin inbox   # one command against another profile
+```
+
+`~/myteam` stays the `default` profile; new ones live in `~/myteam/profiles/<name>/`.
+The **research-admin** preset gives a chief of staff plus a funding scout,
+campus expert-database curator, proposal development coordinator,
+development writer, news & social media manager, events & training,
+research analytics, compliance & award tracking, and a reviewer.
+
+The **academic-admin** preset (dean or department head) gives a chief of
+staff plus faculty affairs (searches, P&T, reviews), curriculum & course
+scheduling, student programs, budget & resources, assessment &
+accreditation, unit analytics, governance & committees, advancement &
+alumni, communications, and a reviewer. Personnel and student records follow
+the `confidential-records` skill. `myteam use dean` or `myteam use dept-head`
+picks this preset automatically.
 
 ## License
 

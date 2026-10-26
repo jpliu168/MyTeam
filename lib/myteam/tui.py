@@ -3,7 +3,7 @@
 Layout:
   ┌ title bar: group name · clock ──────────────────────────────┐
   │ MEMBERS (live)      │  feed: your orders, deliveries,       │
-  │  ● sam    chief     │  agent↔agent traffic, replies,        │
+  │  ● alex   chief     │  agent↔agent traffic, replies,        │
   │  ◐ david  slides    │  system notes                         │
   │  ○ lucy   outreach  │                                       │
   ├─────────────────────┴───────────────────────────────────────┤
@@ -513,7 +513,7 @@ class Room:
             else:
                 self.say("no member '{}'".format(rest), C_BLOCK)
             return True
-        # @mentions (several allowed) / "sam: text" / "sam, text"
+        # @mentions (several allowed) / "alex: text" / "alex, text"
         if raw.startswith("@"):
             words = raw.split()
             mentions, rest_words = [], []

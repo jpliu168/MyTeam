@@ -1,6 +1,6 @@
 # MyTeam — Quickstart: your first day as owner of an agent team
 
-Demo roster: **sam** (operations-manager), **bea** (bookkeeper),
+Demo roster: **alex** (operations-manager), **bea** (bookkeeper),
 **cara** (customer-support). Adjust to yours (`myteam roster`).
 
 ## 0. Fill the handbook (10 minutes — the biggest win)
@@ -25,7 +25,7 @@ up                # start everyone + the mailman
 ```
 assign bea put the September bank export (deliverables/books/inbox/sept.csv) into a ledger and summary
 cara: here are three customer emails, draft replies: <paste>
-@sam what's on the board, and what needs me today?
+@alex what's on the board, and what needs me today?
 ```
 
 Drafts land in `~/myteam/deliverables/`. You review, then send/pay/post
@@ -33,7 +33,7 @@ yourself.
 
 ## 3. Members check each other
 
-Ask sam to "have the reviewer check cara's drafts before I see them" — sam
+Ask alex to "have the reviewer check cara's drafts before I see them" — alex
 runs `myteam ask <reviewer> ...` itself.
 
 ## 4. Daily rhythm
