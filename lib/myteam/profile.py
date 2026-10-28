@@ -76,6 +76,24 @@ ACADEMIC_ADMIN = [
     ("rules", "Dean/head's rules for the team", "给团队的规矩", "things agents must always / never do", True),
     ("notes", "Anything else", "其他", "background the team should know", True),
 ]
+GRADUATE = [
+    ("legal_name", "Your name & degree", "姓名与学位", "e.g. Jane Doe — PhD student, Atmospheric Sciences", False),
+    ("institution", "Institution & program", "学校与项目", "e.g. NC State University, MEAS graduate program", False),
+    ("stage", "Year & stage", "年级与阶段", "e.g. 3rd-year PhD, candidacy passed, defending Spring 2028", False),
+    ("advisor", "Advisor & committee", "导师与委员会", "names, lab/group, how often you meet", True),
+    ("topic", "Research topic", "研究方向", "your dissertation/thesis question in a few sentences", True),
+    ("projects", "Current projects & papers", "在研项目与论文", "one line each: project/paper — goal — status — target venue", True),
+    ("courses", "Classes this term", "本学期课程", "course — role (taking / TA) — AI-use policy if known", True),
+    ("milestones", "Upcoming milestones", "近期学位节点", "quals, proposal, committee meeting, defense, graduation dates", True),
+    ("funding", "Funding", "资助", "RA/TA/fellowship and end dates; fellowships you are applying for", True),
+    ("computing", "Computing & data", "计算与数据", "clusters, allocations, datasets, code repos", True),
+    ("lab", "Lab / group", "实验室 / 课题组", "group name, lab website, labmates, shared resources", True),
+    ("news", "People & groups to follow", "关注的人与团队", "your lab, advisor, collaborators, groups in your field; LinkedIn/X/Scholar pages", True),
+    ("career", "Career goals", "职业目标", "academia, national lab, industry …; target timeline", False),
+    ("voice", "Writing style", "写作风格", "e.g. plain, direct; your advisor's pet peeves", False),
+    ("rules", "Your rules for the team", "给团队的规矩", "things agents must always / never do", True),
+    ("notes", "Anything else", "其他", "background the team should know", True),
+]
 TEACHING = [
     ("legal_name", "Course code & title", "课程代码与名称", "e.g. MEA 591-004 Generative AI for Science", False),
     ("institution", "Institution & department", "学校与院系", "e.g. NC State University, MEAS", False),
@@ -121,12 +139,13 @@ FREELANCE = [
 ]
 FIELDS = BUSINESS
 BY_PACK = {"business": BUSINESS, "research": RESEARCH, "research-admin": RESEARCH_ADMIN,
-           "academic-admin": ACADEMIC_ADMIN, "teaching": TEACHING,
+           "academic-admin": ACADEMIC_ADMIN, "graduate": GRADUATE, "teaching": TEACHING,
            "nonprofit": NONPROFIT, "freelance": FREELANCE}
 TITLE = {"business": ("company-profile", "company profile", "公司简介"),
          "research": ("lab-profile", "lab profile", "实验室简介"),
          "research-admin": ("office-profile", "office profile", "办公室简介"),
          "academic-admin": ("unit-profile", "college/department profile", "院系简介"),
+         "graduate": ("student-profile", "graduate student profile", "研究生简介"),
          "teaching": ("course-profile", "course profile", "课程简介"),
          "nonprofit": ("organization-profile", "organization profile", "组织简介"),
          "freelance": ("practice-profile", "practice profile", "业务简介")}

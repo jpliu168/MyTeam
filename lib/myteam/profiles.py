@@ -34,6 +34,7 @@ REGISTRY = Path(os.environ.get("MYTEAM_PROFILES", str(ROOT / "profiles.json")))
 
 # Guess a field preset from a profile name (used when a new profile is set up).
 _HINTS = [
+    ("graduate", ("grad", "graduate", "phd", "student", "thesis", "dissertation", "masters", "ms")),
     ("academic-admin", ("academic", "dean", "chair", "head", "dept", "department", "college", "provost")),
     ("research-admin", ("admin", "office", "ord", "development", "sponsored", "srs", "vcr")),
     ("research", ("pi", "lab", "research", "science")),

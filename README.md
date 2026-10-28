@@ -77,12 +77,18 @@ form, handbook starter, and how agents address you:
 | Preset | You are | Roles on offer |
 |---|---|---|
 | Small business / company | owner | operations manager, executive assistant, bookkeeper, tax prep, customer support, sales, marketing, copywriter, market researcher, contracts & compliance, HR, data analyst, reviewer |
-| University research lab | PI | chief of staff, proposal writer, manuscript writer, lit scout, HPC runner, data analyst, slides maker, reviewer, grants admin, outreach |
-| University research office | director | chief of staff, funding scout, expert-database curator, proposal coordinator, development writer, news & social media, events & training, research analytics, compliance & awards, reviewer |
-| Academic leadership (dean / dept head) | dean/head | chief of staff, faculty affairs, curriculum & scheduling, student programs, budget & resources, assessment & accreditation, unit analytics, governance & committees, advancement & alumni, communications, reviewer |
+| University research lab | PI | chief of staff, proposal writer, manuscript writer, lit scout, HPC runner, data analyst, slides maker, reviewer, grants admin, outreach, news watcher |
+| University research office | director | chief of staff, funding scout, expert-database curator, proposal coordinator, development writer, news & social media, events & training, research analytics, compliance & awards, reviewer, news watcher |
+| Academic leadership (dean / dept head) | dean/head | chief of staff, faculty affairs, curriculum & scheduling, student programs, budget & resources, assessment & accreditation, unit analytics, governance & committees, advancement & alumni, communications, reviewer, news watcher |
+| Graduate student (MS / PhD) | grad student | manager, research assistant, literature reader, coursework & study coach, dissertation/thesis writer, manuscript writer, data & figures, lab & group life, degree milestones & paperwork, fellowships & career, slides & posters, TA helper, reviewer, news watcher |
 | Teaching / a course | instructor | course manager, course designer, lecture & slides maker, assignment & quiz writer, grading assistant, student Q&A, lab & code developer, accessibility checker, LMS admin, reviewer |
 | Nonprofit / community | director | operations manager, program coordinator, grant writer, donor relations, volunteer coordinator, events, communications, board secretary, bookkeeper, reviewer |
 | Freelancer / creator | owner | studio manager, client manager, proposals & invoices, content producer, social & newsletter, portfolio & web, scheduler, bookkeeper & tax, reviewer |
+
+The **news watcher** collects public news about your team, lab or group (LinkedIn posts that
+show up in search, university news, X/Bluesky, award announcements, alerts you forward) into a
+`news` table and a weekly digest. It never logs in to LinkedIn or scrapes it — forward
+LinkedIn notification emails or paste posts for anything behind the login.
 
 Every preset also has a generalist and custom roles, and you can hire a role
 from any other preset. Change the preset later in Setup; existing members

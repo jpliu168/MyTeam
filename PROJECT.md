@@ -128,3 +128,22 @@
   hints (academic, dean, chair, head, dept, department, college, provost) in profiles.py;
   setup menu text in tui.py (en + zh).
 - Backup of the files changed: _backup-20261026-academic-admin/.
+
+## Graduate Student preset + News watcher (added 2026-10-27)
+- New 8th preset `graduate`: "Graduate student (MS / PhD)", boss "grad student", unit
+  "graduate work". 15 roles (GRADUATE in roles.py, zh names): chief-of-staff (manager),
+  research-assistant, lit-reader (`papers` db table + refs.bib), coursework-coach (learns, never
+  does graded work), thesis-writer, manuscript-writer, data-analyst, lab-life, milestones-forms,
+  fellowships-career (`funding` table), slides-maker, ta-helper, reviewer, news-watch, generalist.
+- New skills: house-style-graduate, academic-integrity (course AI policy, data/citation honesty,
+  authorship, ai-use log in deliverables/plan/ai-use.md). Also gets student-privacy (TA work).
+- Student-profile form (16 fields) in profile.py; handbook starter in packs.py (program, advisor,
+  projects, courses, lab, cv, news-sources, style); name hints (grad, graduate, phd, student,
+  thesis, dissertation, masters, ms) checked first in profiles.py; setup menu text in tui.py.
+- New shared role `news-watch` (NEWS_WATCH in roles.py), also added to research,
+  research-admin and academic-admin: collects public team/lab/field news into a `news` db table
+  and deliverables/news/<YYYY-WW>.md. Sources: what the boss forwards (LinkedIn notification
+  emails, pasted posts), public pages without login, handbook/news-sources.md watch list.
+  Never logs in to LinkedIn/social accounts, never uses the boss's cookies, never scrapes,
+  never posts/likes/connects. research handbook also lists news-sources.md.
+
