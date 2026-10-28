@@ -3,7 +3,8 @@
 **You talk to one manager; the manager runs a team of specialist agents that
 know your organization and get better at its work every week.** For a small
 business, a one-person company, a research lab, a university office, a
-course, a nonprofit, or a freelance practice.
+dean or department head, a graduate student, a course, a nonprofit, or a
+freelance practice.
 See [DESIGN.md](DESIGN.md) for the why and the rules.
 
 ## Install & found your team
@@ -71,7 +72,7 @@ Good to know on Windows:
 - **Update later:** `cd ~/MyTeam && git pull`.
 
 First run asks what kind of team it is, then its name, then runs the hiring
-loop. Seven field presets — each brings its own roles, shared skills, profile
+loop. Eight field presets — each brings its own roles, shared skills, profile
 form, handbook starter, and how agents address you:
 
 | Preset | You are | Roles on offer |
@@ -175,6 +176,27 @@ accreditation, unit analytics, governance & committees, advancement &
 alumni, communications, and a reviewer. Personnel and student records follow
 the `confidential-records` skill. `myteam use dean` or `myteam use dept-head`
 picks this preset automatically.
+
+The **graduate** preset (MS or PhD student) gives you a manager who keeps
+your degree plan, weekly plan and advisor-meeting updates, plus agents for
+each part of grad school: a research assistant (methods, experiments, code,
+run log), a literature reader (`papers` table, BibTeX, reading notes,
+weekly digests), a coursework & study coach, a dissertation/thesis writer,
+a manuscript writer, data & figures, lab & group life (lab meetings,
+journal club, protocols), degree milestones & paperwork, fellowships &
+career, slides & posters, a TA helper, a reviewer and a news watcher.
+The `academic-integrity` skill keeps it honest: the coach teaches and quizzes
+but never writes graded work, every number and citation traces to a real
+source, and agents log where they helped so you can disclose AI use. Students
+can run one profile per part of their life, e.g.:
+
+```bash
+myteam use phd          # research, thesis, papers, lab
+myteam use classes      # set up with the graduate preset for coursework
+```
+
+Names with `grad`, `phd`, `student`, `thesis`, `dissertation` or `masters`
+pick the graduate preset automatically.
 
 ## License
 
